@@ -1,6 +1,7 @@
 #include <catch2/catch_all.hpp>
+#include "InvertedIndex.hpp"
 
-// TODO: Your code
+
 TEST_CASE("Test case name", "[some_tag]")
 {
     REQUIRE(false);
