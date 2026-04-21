@@ -7,6 +7,11 @@
 namespace InvertedIndex
 {
 class Document;
+struct Entry
+{
+    size_t index;
+    int Id;
+}; // каждому слову можем вызвать вектор, который сопостовляется со структорой и имеет свою пару
 
 class InvertedIndex
 {
@@ -25,11 +30,5 @@ class InvertedIndex
     std::unordered_map<int, std::shared_ptr<Document>> documents_;
     // хранилище документов по их айди
 };
-
-struct Entry
-{
-    size_t index;
-    int Id;
-}; // каждому слову можем вызвать вектор, который сопостовляется со структорой и имеет свою пару
 
 } // namespace InvertedIndex
