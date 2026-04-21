@@ -17,3 +17,5 @@ if (TARGET project_sanitizers)
 endif ()
 
 add_test(NAME resource_tests COMMAND resource_tests)
+
+target_link_libraries(resource_tests PRIVATE InvertedIndex)
