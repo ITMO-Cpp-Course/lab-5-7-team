@@ -8,8 +8,9 @@ void addDocument(const Document& document)
 {
     int Id = document.getId();
     const std::vector<std::string>& words = document.getWords(); // методы класса Document
-    documents_[docId] = std::make_shared<Document>(document);    // сохраняем документ внутри хранилище documents_
-    for (const std::string& word : words)                        // проходим по каждому слову из списка
+    documents_[docId] = std::make_shared<Document>(document);
+    // сохраняем документ внутри хранилище documents_
+    for (const std::string& word : words) // проходим по каждому слову из списка
     {
         std::vector<Entry>& entries = InvertedIndex_[word]; // каждое слово добавляем в хранилище
         bool found = false;
@@ -24,7 +25,8 @@ void addDocument(const Document& document)
         }
         if (!found)
         {
-            entries.push_back(Entry(Id, 1)); // стандартный метод добавления новой пары в конец вектора
+            entries.push_back(Entry(Id, 1));
+            // стандартный метод добавления новой пары в конец вектора
         }
     }
 }
@@ -36,16 +38,20 @@ void removeDocument(int Id)
     {
         return; // выход из метода
     }
-    std::shared_ptr<Document> Ptr = it->second; // умный указатель на Document, чтобы работать со словами после удаления
+    std::shared_ptr<Document> Ptr = it->second;
+    // умный указатель на Document, чтобы работать со словами после удаления
     for (const std::string& word : words)
     {
         auto wordDoc = InvertedIndex_[word];
-        std::vector<Entry>& entries = wordDoc->second; // передаем ссылку на вектор, который содержит пары айди-индекс
-        entries.erase(std::remove_if(entries.begin(), entries.end(), // пробегает от начала до конца в entrues
+        std::vector<Entry>& entries = wordDoc->second;
+        // передаем ссылку на вектор, который содержит пары айди-индекс
+        entries.erase(std::remove_if(entries.begin(), entries.end(),
+                                     // пробегает от начала до конца в entrues
                                      [Id](const Entry& entry) {
                                          return entry.Id == Id;
-                                     }), // если запись для этого айди есть - remove_if перемещает ее в конец
-                      entries.end());    // erase удаляет все элементы, перемещенные в конец вектора
+                                     }), // если запись для этого айди есть, remove_if перемещает ее в конец
+                      entries.end());
+        // erase удаляет все элементы, перемещенные в конец вектора
         if (entries.empty())
         { // если вектор (пара айди-индекс) пуста (индекс 0), то удаляем ее
             InvertedIndex_.erase(wordDoc);
