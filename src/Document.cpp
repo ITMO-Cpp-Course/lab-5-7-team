@@ -19,6 +19,6 @@ const std::string& Document::getName() const
 
 const std::string& Document::getText() const
 {
-    return text; // Возвращаем константную ссылку на поле content_
+    return text_; // Возвращаем константную ссылку на поле content_
 }
 } // namespace lab5::document_work

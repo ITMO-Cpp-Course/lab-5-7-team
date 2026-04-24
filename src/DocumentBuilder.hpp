@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Document.hpp"
 #include <functional>
 #include <string>
 #include <vector>
