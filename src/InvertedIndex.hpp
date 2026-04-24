@@ -14,8 +14,8 @@ struct Entry
 {
     size_t index;
     size_t docId;
-    Entry() : docId(0), index(0);
-    Entry(size_t Id, size_t ind) : docId(Id), index(ind);
+    Entry() : index(0), docId(0) {}
+    Entry(size_t ind, size_t Id) : index(ind), docId(Id) {}
 }; // каждому слову можем вызвать вектор, который сопостовляется со структорой и имеет свою пару
 
 class InvertedIndex
@@ -26,7 +26,7 @@ class InvertedIndex
     // пользователь удаляет документ по его айди
     std::vector<Entry> search(const std::string& word) const; // принимет одно слово
     // возвращает список пар (айди документа, количество слов в этом документе)
-    int WordInDocument(const std::string& word, size_t Id) const;
+    size_t WordInDocument(const std::string& word, size_t Id) const;
     // ищет слово только в одном документе
 
   private:

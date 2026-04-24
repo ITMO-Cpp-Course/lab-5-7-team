@@ -7,14 +7,15 @@ namespace lab5::document_work
 {
 void InvertedIndex::addDocument(const Document& document)
 {
-    size_t Id = Document::getId();
+    size_t Id = document.getId();
     std::string lower = DocumentBuilder::ToLower(document.getText());
+    auto words = DocumentBuilder::SplitToWords(lower);
     // берем текст и сразу переводим в нижний регистр
-    documents_[docId] = std::make_shared<Document>(document);
+    documents_[Id] = std::make_shared<Document>(document);
     // сохраняем документ внутри хранилище documents_
     for (const std::string& word : words) // проходим по каждому слову из списка
     {
-        std::vector<Entry>& entries = invertedIndex_[word]; // каждое слово добавляем в хранилище
+        std::vector<Entry>& entries = invertedIndex_[word]; // каждое слово добавляем в хранилищее
         bool found = false;
         for (Entry& entry : entries) // берем каждый entry из entries
         {                            // работаем с ссылкой на оригинальную запись
@@ -40,6 +41,7 @@ void InvertedIndex::removeDocument(size_t Id)
     {
         return; // выход из метода
     }
+    std::shared_ptr<Document> Ptr = it->second;
     std::string lower = DocumentBuilder::ToLower(Ptr->getText());
     // ptr - умный shared_ptr<Document>, через него вызываем getText у документа
     auto words = DocumentBuilder::SplitToWords(lower); // разбили строку на слова
@@ -77,7 +79,7 @@ std::vector<Entry> InvertedIndex::search(const std::string& word) const
     return {};
 }
 
-int InvertedIndex::WordInDocument(const std::string& word, size_t Id) const
+size_t InvertedIndex::WordInDocument(const std::string& word, size_t Id) const
 {
     auto it = invertedIndex_.find(word); // находим итератор для слова
     if (it == invertedIndex_.end())
