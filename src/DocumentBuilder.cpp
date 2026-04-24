@@ -13,10 +13,10 @@ Document DocumentBuilder::Build(size_t id, const std::string& name, const std::s
 
 std::string DocumentBuilder::ToLower(const std::string& text)
 {
-    std::string result = text;  //копирование исходной строки
-    for (char& c : result)  //итерация по каждому символу
+    std::string result = text; // копирование исходной строки
+    for (char& c : result)     // итерация по каждому символу
     {
-        c = std::tolower(static_cast<unsigned char>(c));  //
+        c = std::tolower(static_cast<unsigned char>(c)); //
     }
     return result;
 }
@@ -24,7 +24,7 @@ std::string DocumentBuilder::ToLower(const std::string& text)
 std::string DocumentBuilder::ToUpper(const std::string& text)
 {
     std::string result = text;
-    for (char& c : result)  //Мы берем символ по ссылке, чтобы изменять его прямо внутри строки result
+    for (char& c : result) // Мы берем символ по ссылке, чтобы изменять его прямо внутри строки result
     {
         c = std::toupper(static_cast<unsigned char>(c));
     }

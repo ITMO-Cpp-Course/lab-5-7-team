@@ -18,7 +18,7 @@ class DocumentBuilder
 
     static std::string ToTitleWord(const std::string& text);
 
-    static std::vector<std::string> SplitToWords(const std::string& text);  //тип-массив строк(слов)
+    static std::vector<std::string> SplitToWords(const std::string& text); // тип-массив строк(слов)
 };
 
 } // namespace lab5::document_work
