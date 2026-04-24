@@ -1,6 +1,6 @@
-#include "Document.hpp" // наш класс Document
-#include <catch2/catch_all.hpp>
+#include "Document.hpp" // ╨╜╨░╤И ╨║╨╗╨░╤Б╤Б Document
 #include "InvertedIndex.hpp"
+#include <catch2/catch_all.hpp>
 using namespace lab5::document_work;
 
 TEST_CASE("Document constructor and getters", "[document]")
@@ -73,7 +73,7 @@ TEST_CASE("Document with empty strings", "[document]")
 bool containsEntry(const std::vector<Entry>& entries, size_t docId, size_t index)
 {
     auto it = std::find_if(entries.begin(), entries.end(),
-        [docId, index](const Entry& e) { return e.docId == docId && e.index == index; });
+                           [docId, index](const Entry& e) { return e.docId == docId && e.index == index; });
     if (it == entries.end())
     {
         return false; // элемент не найден
