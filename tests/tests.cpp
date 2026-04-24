@@ -1,6 +1,6 @@
 #include "Document.hpp" // наш класс Document
 #include <catch2/catch_all.hpp>
-
+#include "InvertedIndex.hpp"
 using namespace lab5::document_work;
 
 TEST_CASE("Document constructor and getters", "[document]")
@@ -65,4 +65,101 @@ TEST_CASE("Document with empty strings", "[document]")
     REQUIRE(doc.getId() == 0);
     REQUIRE(doc.getName().empty());
     REQUIRE(doc.getText().empty());
+}
+// создаем функцию проверки наличия структуры Entry с заданым айди и индексом
+
+// создаем функцию проверки наличия структуры Entry с заданым айди и индексом
+
+bool containsEntry(const std::vector<Entry>& entries, size_t docId, size_t index)
+{
+    auto it = std::find_if(entries.begin(), entries.end(),
+        [docId, index](const Entry& e) { return e.docId == docId && e.index == index; });
+    if (it == entries.end())
+    {
+        return false; // элемент не найден
+    }
+    return true; // найден – проверяем счётчик
+}
+TEST_CASE("InvertedIndex : add Document", "[InvertedIndex]")
+{
+    InvertedIndex index;
+    Document doc1(1, "doc1", "cat dog cat");
+    Document doc2(2, "doc2", "cat");
+    index.addDocument(doc1);
+    index.addDocument(doc2);
+
+    SECTION("Cat")
+    {
+        auto result = index.search("cat");
+        // возвращает структуру Entry
+        REQUIRE(result.size() == 2);
+        REQUIRE(containsEntry(result, doc1.getId(), 2));
+        REQUIRE(containsEntry(result, doc2.getId(), 1));
+    }
+    SECTION("Dog")
+    {
+        auto result = index.search("dog");
+        REQUIRE(result.size() == 1);
+        REQUIRE(containsEntry(result, doc1.getId(), 1));
+    }
+    SECTION("No word")
+    {
+        auto result = index.search("surprise");
+        REQUIRE(result.empty());
+    }
+}
+
+TEST_CASE("InvertedIndex: remove Document", "[invertedIndex]")
+{
+    InvertedIndex index;
+    Document doc1(1, "doc1", "apple banana apple");
+    Document doc2(2, "doc2", "apple cherry");
+    index.addDocument(doc1);
+    index.addDocument(doc2);
+    SECTION("document")
+    {
+        index.removeDocument(1);
+        auto result = index.search("apple");
+        REQUIRE(result.size() == 1);
+        REQUIRE(containsEntry(result, doc2.getId(), 1));
+        REQUIRE(!containsEntry(result, doc1.getId(), 1));
+
+        auto resultBanana = index.search("banana");
+        REQUIRE(resultBanana.empty());
+
+        auto resultCherry = index.search("cherry");
+        REQUIRE(resultCherry.size() == 1);
+        REQUIRE(containsEntry(resultCherry, doc2.getId(), 1));
+    }
+
+    SECTION("no document")
+    {
+        REQUIRE_NOTHROW(index.removeDocument(22));
+        REQUIRE(index.search("apple").size() == 2);
+    }
+}
+
+TEST_CASE("InvertedIndex: WordInDocument", "[InvertedIndex]")
+{
+    InvertedIndex index;
+    Document doc(5, "doc5", "one one two");
+    index.addDocument(doc);
+
+    SECTION("Word in document")
+    {
+        REQUIRE(index.WordInDocument("one", 5) == 2);
+        REQUIRE(index.WordInDocument("two", 5) == 1);
+    }
+
+    SECTION("No word in this document")
+    {
+        Document doc2(6, "doc6", "three");
+        index.addDocument(doc2);
+        REQUIRE(index.WordInDocument("one", 6) == 0);
+    }
+
+    SECTION("No word")
+    {
+        REQUIRE(index.WordInDocument("surprise", 5) == 0);
+    }
 }
