@@ -12,7 +12,13 @@ option(STRICT_WARNINGS "Enable extra warnings and treat warnings as errors" ON)
 option(ENABLE_SANITIZERS "Enable AddressSanitizer" ON)
 
 # Common warnings
-add_library(project_warnings INTERFACE)
+add_library(project_warnings INTERFACE
+            src/Document.cpp
+            src/Document.hpp
+            src/InvertedIndex.cpp 
+            src/InvertedIndex.hpp 
+            src/DocumentBuilder.cpp 
+            src/DocumentBuilder.hpp)
 if (MSVC)
     target_compile_options(project_warnings INTERFACE
             /W4 /permissive- /Zc:preprocessor /Zc:__cplusplus /utf-8
