@@ -13,13 +13,14 @@ class DocumentBuilder
     DocumentBuilder() = default;
     Document Build(size_t id, const std::string& name, const std::string& content);
 
-    std::string ToLower(const std::string& text) const; // нижний регистр
+    static std::string ToLower(const std::string& text); // нижний регистр
 
-    std::string ToUpper(const std::string& text) const; // верхний регистр
+    static std::string ToUpper(const std::string& text); // верхний регистр
 
-    std::string ToTitleWord(const std::string& text) const; // первые буквы заглавные
+    static std::string ToTitleWord(const std::string& text); // первые буквы заглавные
 
-    std::vector<std::string> SplitToWords(const std::string& text) const; // разбивка на слова
+    static std::vector<std::string> SplitToWords(const std::string& text); // разбивка на слова
+    // статический метод принадлежит самому классу, нельзя обращаться к this - не статичесим полям
 };
 
 } // namespace lab5::document_work

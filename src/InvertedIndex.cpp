@@ -67,7 +67,7 @@ void InvertedIndex::removeDocument(size_t Id)
     documents_.erase(it);
 }
 
-std::vector<Entry> InkvertedIndex::search(const std::string& word) const
+std::vector<Entry> InvertedIndex::search(const std::string& word) const
 {
     auto it = invertedIndex_.find(word);
     if (it != invertedIndex_.end())
@@ -77,7 +77,7 @@ std::vector<Entry> InkvertedIndex::search(const std::string& word) const
     return {};
 }
 
-int InwertedIndex::WordInDocument(const std::string& word, size_t Id) const
+int InvertedIndex::WordInDocument(const std::string& word, size_t Id) const
 {
     auto it = invertedIndex_.find(word); // находим итератор для слова
     if (it == invertedIndex_.end())
