@@ -32,7 +32,7 @@ class InvertedIndex
   private:
     std::unordered_map<std::string, std::vector<Entry>> invertedIndex_;
     // хранилище пар для каждого слова
-    std::unordered_map<int, std::shared_ptr<Document>> documents_;
+    std::unordered_map<size_t, std::shared_ptr<Document>> documents_;
     // хранилище документов по их айди
 };
 

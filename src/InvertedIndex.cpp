@@ -21,7 +21,7 @@ void InvertedIndex::addDocument(const Document& document)
         {                            // работаем с ссылкой на оригинальную запись
             if (entry.docId == Id)
             {
-                found == true;
+                found = true;
                 entry.index++;
                 break;
             }
