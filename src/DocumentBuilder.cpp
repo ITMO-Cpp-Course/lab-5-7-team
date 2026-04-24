@@ -1,4 +1,5 @@
 #include "DocumentBuilder.hpp"
+#include "Document.hpp"
 #include <cctype>
 #include <sstream>
 #include <string>
@@ -11,7 +12,7 @@ Document DocumentBuilder::Build(size_t id, const std::string& name, const std::s
     return Document(id, name, content);
 }
 
-std::string DocumentBuilder::ToLower(const std::string& text) const
+std::string DocumentBuilder::ToLower(const std::string& text)
 {
     std::string result = text;
     for (char& c : result)
@@ -21,7 +22,7 @@ std::string DocumentBuilder::ToLower(const std::string& text) const
     return result;
 }
 
-std::string DocumentBuilder::ToUpper(const std::string& text) const
+std::string DocumentBuilder::ToUpper(const std::string& text)
 {
     std::string result = text;
     for (char& c : result)
@@ -31,7 +32,7 @@ std::string DocumentBuilder::ToUpper(const std::string& text) const
     return result;
 }
 
-std::string DocumentBuilder::ToTitleWord(const std::string& text) const
+std::string DocumentBuilder::ToTitleWord(const std::string& text)
 {
     std::string result = text;
     bool new_word = true;
@@ -59,7 +60,7 @@ std::string DocumentBuilder::ToTitleWord(const std::string& text) const
     return result;
 }
 
-std::vector<std::string> DocumentBuilder::SplitToWords(const std::string& text) const
+std::vector<std::string> DocumentBuilder::SplitToWords(const std::string& text)
 {
     std::vector<std::string> words;
     std::stringstream ss(text);

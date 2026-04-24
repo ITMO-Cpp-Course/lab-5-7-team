@@ -3,7 +3,7 @@
 namespace lab5::document_work
 {
 Document::Document(size_t id, const std::string& name, const std::string& text)
-    : id_(id), name_(name), text(text) // Инициализируем поля
+    : id_(id), name_(name), text_(text) // Инициализируем поля
 {
 }
 
