@@ -12,10 +12,10 @@ class Document;
 class DocumentBuilder;
 struct Entry
 {
-    size_t index;
     size_t docId;
-    Entry() : index(0), docId(0) {}
-    Entry(size_t ind, size_t Id) : index(ind), docId(Id) {}
+    size_t index;
+    Entry() : docId(0), index(0) {}
+    Entry(size_t Id, size_t ind) : docId(Id), index(ind) {}
 }; // каждому слову можем вызвать вектор, который сопостовляется со структорой и имеет свою пару
 
 class InvertedIndex
