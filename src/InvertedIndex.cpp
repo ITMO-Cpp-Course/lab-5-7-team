@@ -10,20 +10,13 @@ void InvertedIndex::addDocument(const Document& document)
     size_t Id = document.getId();
     std::string lower = DocumentBuilder::ToLower(document.getText());
     auto words = DocumentBuilder::SplitToWords(lower);
-    // вектор может содержать дубликаты, если слово встречается несколько раз
-    // берем текст и сразу переводим в нижний регистр
     documents_[Id] = std::make_shared<Document>(document);
-    //Оператор [] создаёт пустой shared_ptr для ключа Id,
-    //если его не было, затем присваивает новый shared_ptr
-    // сохраняем документ внутри хранилище documents_
-    for (const std::string& word : words) // проходим по каждому слову из списка
+    for (const std::string& word : words)
     {
-        std::vector<Entry>& entries = invertedIndex_[word];// каждое слово добавляем в хранилище
-        //Оператор [] в unordered_map создаёт новый пустой вектор,
-        //если слова ещё нет в индексе. Возвращается ссылка на вектор.
+        std::vector<Entry>& entries = invertedIndex_[word];
         bool found = false;
-        for (Entry& entry : entries) // берем каждый entry из entries
-        {                            // работаем с ссылкой на оригинальную запись
+        for (Entry& entry : entries)
+        {
             if (entry.docId == Id)
             {
                 found = true;
@@ -34,18 +27,16 @@ void InvertedIndex::addDocument(const Document& document)
         if (!found)
         {
             entries.push_back(Entry(Id, 1));
-            // стандартный метод добавления новой пары в конец вектора
         }
     }
 }
 
 void InvertedIndex::removeDocument(size_t Id)
 {
-    auto it = documents_.find(Id); // номер ячейки, где лежит документ
-    //итератор на пару (id, shared_ptr)
+    auto it = documents_.find(Id);
     if (it == documents_.end())
     {
-        return; // выход из метода
+        return;
     }
     std::shared_ptr<Document> Ptr = it->second;
     std::string lower = DocumentBuilder::ToLower(Ptr->getText());
@@ -57,25 +48,20 @@ void InvertedIndex::removeDocument(size_t Id)
         if (wordDoc != invertedIndex_.end())
         {
             std::vector<Entry>& entries = wordDoc->second;
-            // передаем ссылку на вектор, который содержит пары айди-индекс
             entries.erase(std::remove_if(entries.begin(), entries.end(),
-                                         // пробегает от начала до конца в entrues
+
                                          [Id](const Entry& entry) {
                                              return entry.docId == Id;//[]-объект,() у кого берет
-                                         }), // если запись для этого айди есть, remove_if перемещает ее в конец
+                                         }),
                           entries.end());
-            // erase удаляет все элементы, перемещенные в конец вектора
+
             if (entries.empty())
-            { // если вектор (пара айди-индекс) пуста (индекс 0), то удаляем ее
+            {
                 invertedIndex_.erase(wordDoc);
-                //Если после удаления вектор записей для этого слова стал пустым,
-                //удаляем само слово из invertedIndex_ (чтобы не хранить пустые векторы).
             }
         }
     }
     documents_.erase(it);
-    //Удаляем документ из documents_ по итератору it. Теперь shared_ptr уничтожается, и если это была последняя ссылка,
-    //документ удаляется из памяти
 }
 
 std::vector<Entry> InvertedIndex::search(const std::string& word) const
@@ -84,23 +70,23 @@ std::vector<Entry> InvertedIndex::search(const std::string& word) const
     if (it != invertedIndex_.end())
     {
         return it->second;
-    } // если слово найдено, возвращаем vector<Entry>: пара айди-индекс
+    }
     return {};
 }
 
 size_t InvertedIndex::WordInDocument(const std::string& word, size_t Id) const
 {
-    auto it = invertedIndex_.find(word); // находим итератор для слова
+    auto it = invertedIndex_.find(word);
     if (it == invertedIndex_.end())
     {
         return 0;
     }
     const std::vector<Entry>& entries = it->second;
-    for (const Entry& entry : entries) // проходим по всем парам айди-индекс для слова
+    for (const Entry& entry : entries)
     {
         if (entry.docId == Id)
         {
-            return entry.index; // айди совпадает с нашим - выдаем для него индекс
+            return entry.index;
         }
     }
     return 0;

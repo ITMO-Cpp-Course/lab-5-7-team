@@ -13,8 +13,8 @@ Document DocumentBuilder::Build(size_t id, const std::string& name, const std::s
 
 std::string DocumentBuilder::ToLower(const std::string& text)
 {
-    std::string result = text; // копирование исходной строки
-    for (char& c : result)     // итерация по каждому символу
+    std::string result = text;
+    for (char& c : result)
     {
         c = std::tolower(static_cast<unsigned char>(c)); //
     }
@@ -24,7 +24,7 @@ std::string DocumentBuilder::ToLower(const std::string& text)
 std::string DocumentBuilder::ToUpper(const std::string& text)
 {
     std::string result = text;
-    for (char& c : result) // Мы берем символ по ссылке, чтобы изменять его прямо внутри строки result
+    for (char& c : result)
     {
         c = std::toupper(static_cast<unsigned char>(c));
     }
@@ -61,13 +61,13 @@ std::string DocumentBuilder::ToTitleWord(const std::string& text)
 
 std::vector<std::string> DocumentBuilder::SplitToWords(const std::string& text)
 {
-    std::vector<std::string> words;  // массив для хранения слов
-    std::stringstream ss(text);    // перемешаем поток в строку
-    std::string word;   //переменная, в которую будем сщхранять наши слова
+    std::vector<std::string> words;
+    std::stringstream ss(text);
+    std::string word;
 
     while (ss >> word)
     {
-        words.push_back(word);  //кладем слова в контейнер
+        words.push_back(word);
     }
 
     return words;

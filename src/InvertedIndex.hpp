@@ -16,26 +16,19 @@ struct Entry
     size_t index;  //количество слов в этом документе
     Entry() : docId(0), index(0) {}
     Entry(size_t Id, size_t ind) : docId(Id), index(ind) {}
-}; // каждому слову можем вызвать вектор, который сопостовляется со структорой и имеет свою пару
+};
 
 class InvertedIndex
 {
   public:
     void addDocument(const Document& document);
     void removeDocument(size_t Id);
-    // пользователь удаляет документ по его айди
-    std::vector<Entry> search(const std::string& word) const; // принимет одно слово
-    // возвращает список пар (айди документа, количество слов в этом документе)
+    std::vector<Entry> search(const std::string& word) const;
     size_t WordInDocument(const std::string& word, size_t docId) const;
-    // уточняющий метод, чтобы понять сколько слов конкретном документеищет слово только в одном документе
 
   private:
     std::unordered_map<std::string, std::vector<Entry>> invertedIndex_;
-    // хранилище пар для каждого слова
     std::unordered_map<size_t, std::shared_ptr<Document>> documents_;
-    // хранилище документов по их айди
-    //Чтобы индекс не просто знал, что «слово есть в документе №1»,
-    //но и мог по запросу выдать нам этот документ
 };
 
 } // namespace lab5::document_work

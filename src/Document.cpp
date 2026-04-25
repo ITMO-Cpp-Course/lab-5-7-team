@@ -8,16 +8,16 @@ Document::Document(size_t id, const std::string& name, const std::string& text)
 
 size_t Document::getId() const
 {
-    return id_; //  возвращаем значение приватного поля
+    return id_;
 }
 
 const std::string& Document::getName() const
 {
-    return name_; // Возвращаем константную ссылку на поле name_
+    return name_;
 }
 
 const std::string& Document::getText() const
 {
-    return text_; // Возвращаем константную ссылку на поле content_
+    return text_;
 }
 } // namespace lab5::document_work

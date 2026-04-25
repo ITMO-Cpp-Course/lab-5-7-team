@@ -7,13 +7,13 @@ class Document
   public:
     Document(size_t id, const std::string& name, const std::string& text);
 
-    size_t getId() const; // const в конце означает, что метод не изменяет поля объекта, только читает данные
+    size_t getId() const;
     const std::string& getName() const;
     const std::string& getText() const;
 
   private:
-    size_t id_;        // Уникальный идентификатор
-    std::string name_; // Имя документа
-    std::string text_; // Содержимое текста
+    size_t id_;
+    std::string name_;
+    std::string text_;
 };
 } // namespace lab5::document_work
