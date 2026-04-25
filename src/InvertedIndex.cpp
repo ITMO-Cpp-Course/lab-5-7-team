@@ -1,4 +1,5 @@
 #include "InvertedIndex.hpp"
+#include "DocumentBuilder.hpp"
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -15,7 +16,7 @@ void InvertedIndex::addDocument(const Document& document)
     // сохраняем документ внутри хранилище documents_
     for (const std::string& word : words) // проходим по каждому слову из списка
     {
-        std::vector<Entry>& entries = invertedIndex_[word]; // каждое слово добавляем в хранилищее
+        std::vector<Entry>& entries = invertedIndex_[word]; // каждое слово добавляем в хранилище
         bool found = false;
         for (Entry& entry : entries) // берем каждый entry из entries
         {                            // работаем с ссылкой на оригинальную запись

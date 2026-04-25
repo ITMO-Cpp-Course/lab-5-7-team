@@ -7,9 +7,9 @@
 
 namespace lab5::document_work
 {
-Document DocumentBuilder::Build(size_t id, const std::string& name, const std::string& content)
+Document DocumentBuilder::Build(size_t id, const std::string& name, const std::string& text)
 {
-    return Document(id, name, content);
+    return Document(id, name, text);
 }
 
 std::string DocumentBuilder::ToLower(const std::string& text)

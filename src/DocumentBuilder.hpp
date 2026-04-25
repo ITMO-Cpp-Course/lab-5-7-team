@@ -12,7 +12,7 @@ class DocumentBuilder
 {
   public:
     DocumentBuilder() = default;
-    Document Build(size_t id, const std::string& name, const std::string& content);
+    Document Build(size_t id, const std::string& name, const std::string& text);
 
     static std::string ToLower(const std::string& text); // нижний регистр
 
