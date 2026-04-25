@@ -1,4 +1,4 @@
-#include "Document.hpp" // ╨╜╨░╤И ╨║╨╗╨░╤Б╤Б Document
+#include "Document.hpp" //
 #include "InvertedIndex.hpp"
 #include <catch2/catch_all.hpp>
 using namespace lab5::document_work;
@@ -66,9 +66,9 @@ TEST_CASE("Document with empty strings", "[document]")
     REQUIRE(doc.getName().empty());
     REQUIRE(doc.getText().empty());
 }
-// создаем функцию проверки наличия структуры Entry с заданым айди и индексом
 
 // создаем функцию проверки наличия структуры Entry с заданым айди и индексом
+
 
 bool containsEntry(const std::vector<Entry>& entries, size_t docId, size_t index)
 {
@@ -161,5 +161,101 @@ TEST_CASE("InvertedIndex: WordInDocument", "[InvertedIndex]")
     SECTION("No word")
     {
         REQUIRE(index.WordInDocument("surprise", 5) == 0);
+    }
+}
+TEST_CASE("DocumentBuilder::SplitToWords splits text into words", "[DocumentBuilder][SplitToWords]")
+{
+    SECTION("Simple sentence")
+    {
+        auto words = DocumentBuilder::SplitToWords("hello world cpp");
+        REQUIRE(words.size() == 3);
+        REQUIRE(words[0] == "hello");
+        REQUIRE(words[1] == "world");
+        REQUIRE(words[2] == "cpp");
+    }
+
+    SECTION("Empty string")
+    {
+        auto words = DocumentBuilder::SplitToWords("");
+        REQUIRE(words.empty());
+    }
+
+    SECTION("Single word")
+    {
+        auto words = DocumentBuilder::SplitToWords("hello");
+        REQUIRE(words.size() == 1);
+        REQUIRE(words[0] == "hello");
+    }
+
+    SECTION("Multiple spaces")
+    {
+        auto words = DocumentBuilder::SplitToWords("hello    world");
+        REQUIRE(words.size() == 2);
+        REQUIRE(words[0] == "hello");
+        REQUIRE(words[1] == "world");
+    }
+
+    SECTION("Words with punctuation")
+    {
+        auto words = DocumentBuilder::SplitToWords("hello, world!");
+        REQUIRE(words.size() == 2);
+        REQUIRE(words[0] == "hello,");
+        REQUIRE(words[1] == "world!");
+    }
+
+    SECTION("Newlines and tabs")
+    {
+        auto words = DocumentBuilder::SplitToWords("hello\nworld\tcpp");
+        REQUIRE(words.size() == 3);
+        REQUIRE(words[0] == "hello");
+        REQUIRE(words[1] == "world");
+        REQUIRE(words[2] == "cpp");
+    }
+}
+
+TEST_CASE("DocumentBuilder", "[DocumentBuilder]")
+{
+    std::string text = "  HeLLo   WoRlD  ";
+
+    std::string lower = DocumentBuilder::ToLower(text);
+    REQUIRE(lower == "  hello   world  ");
+
+    std::string title = DocumentBuilder::ToTitleWord(text);
+    REQUIRE(title == "  Hello   World  ");
+
+    auto words = DocumentBuilder::SplitToWords(text);
+    REQUIRE(words.size() == 2);
+    REQUIRE(words[0] == "HeLLo");
+    REQUIRE(words[1] == "WoRlD");
+}
+TEST_CASE("DocumentBuilder handles edge cases", "[DocumentBuilder][EdgeCases]")
+{
+    SECTION("Very long string")
+    {
+        std::string long_text(10000, 'a');
+        auto words = DocumentBuilder::SplitToWords(long_text);
+        REQUIRE(words.size() == 1);
+        REQUIRE(words[0].size() == 10000);
+    }
+
+    SECTION("Only spaces")
+    {
+        std::string spaces = "     ";
+        auto words = DocumentBuilder::SplitToWords(spaces);
+        REQUIRE(words.empty());
+
+        std::string lower = DocumentBuilder::ToLower(spaces);
+        REQUIRE(lower == spaces);
+    }
+
+    SECTION("Special characters")
+    {
+        std::string special = "@#$%^&*()";
+        auto words = DocumentBuilder::SplitToWords(special);
+        REQUIRE(words.size() == 1);
+        REQUIRE(words[0] == "@#$%^&*()");
+
+        std::string lower = DocumentBuilder::ToLower(special);
+        REQUIRE(lower == special);
     }
 }

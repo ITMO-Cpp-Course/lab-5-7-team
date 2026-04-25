@@ -61,13 +61,13 @@ std::string DocumentBuilder::ToTitleWord(const std::string& text)
 
 std::vector<std::string> DocumentBuilder::SplitToWords(const std::string& text)
 {
-    std::vector<std::string> words;
-    std::stringstream ss(text);
-    std::string word;
+    std::vector<std::string> words;  // массив для хранения слов
+    std::stringstream ss(text);    // перемешаем поток в строку
+    std::string word;   //переменная, в которую будем сщхранять наши слова
 
     while (ss >> word)
     {
-        words.push_back(word);
+        words.push_back(word);  //кладем слова в контейнер
     }
 
     return words;

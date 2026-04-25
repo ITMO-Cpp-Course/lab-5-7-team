@@ -1,6 +1,6 @@
 #include "InvertedIndex.hpp"
 #include "DocumentBuilder.hpp"
-#include <algorithm>
+#include <algorithm>   //для std::remove_if
 #include <string>
 #include <vector>
 namespace lab5::document_work
@@ -10,13 +10,17 @@ void InvertedIndex::addDocument(const Document& document)
     size_t Id = document.getId();
     std::string lower = DocumentBuilder::ToLower(document.getText());
     auto words = DocumentBuilder::SplitToWords(lower);
-
+    // вектор может содержать дубликаты, если слово встречается несколько раз
     // берем текст и сразу переводим в нижний регистр
     documents_[Id] = std::make_shared<Document>(document);
+    //Оператор [] создаёт пустой shared_ptr для ключа Id,
+    //если его не было, затем присваивает новый shared_ptr
     // сохраняем документ внутри хранилище documents_
     for (const std::string& word : words) // проходим по каждому слову из списка
     {
-        std::vector<Entry>& entries = invertedIndex_[word]; // каждое слово добавляем в хранилище
+        std::vector<Entry>& entries = invertedIndex_[word];// каждое слово добавляем в хранилище
+        //Оператор [] в unordered_map создаёт новый пустой вектор,
+        //если слова ещё нет в индексе. Возвращается ссылка на вектор.
         bool found = false;
         for (Entry& entry : entries) // берем каждый entry из entries
         {                            // работаем с ссылкой на оригинальную запись
@@ -38,6 +42,7 @@ void InvertedIndex::addDocument(const Document& document)
 void InvertedIndex::removeDocument(size_t Id)
 {
     auto it = documents_.find(Id); // номер ячейки, где лежит документ
+    //итератор на пару (id, shared_ptr)
     if (it == documents_.end())
     {
         return; // выход из метода
@@ -56,17 +61,21 @@ void InvertedIndex::removeDocument(size_t Id)
             entries.erase(std::remove_if(entries.begin(), entries.end(),
                                          // пробегает от начала до конца в entrues
                                          [Id](const Entry& entry) {
-                                             return entry.docId == Id;
+                                             return entry.docId == Id;//[]-объект,() у кого берет
                                          }), // если запись для этого айди есть, remove_if перемещает ее в конец
                           entries.end());
             // erase удаляет все элементы, перемещенные в конец вектора
             if (entries.empty())
             { // если вектор (пара айди-индекс) пуста (индекс 0), то удаляем ее
                 invertedIndex_.erase(wordDoc);
+                //Если после удаления вектор записей для этого слова стал пустым,
+                //удаляем само слово из invertedIndex_ (чтобы не хранить пустые векторы).
             }
         }
     }
     documents_.erase(it);
+    //Удаляем документ из documents_ по итератору it. Теперь shared_ptr уничтожается, и если это была последняя ссылка,
+    //документ удаляется из памяти
 }
 
 std::vector<Entry> InvertedIndex::search(const std::string& word) const
