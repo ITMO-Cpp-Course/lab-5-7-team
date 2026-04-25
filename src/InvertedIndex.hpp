@@ -13,7 +13,7 @@ class DocumentBuilder;
 struct Entry
 {
     size_t docId;
-    size_t index;  //количество слов в этом документе
+    size_t index; // количество слов в этом документе
     Entry() : docId(0), index(0) {}
     Entry(size_t Id, size_t ind) : docId(Id), index(ind) {}
 };

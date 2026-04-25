@@ -1,6 +1,6 @@
 #include "InvertedIndex.hpp"
 #include "DocumentBuilder.hpp"
-#include <algorithm>   //для std::remove_if
+#include <algorithm> //для std::remove_if
 #include <string>
 #include <vector>
 namespace lab5::document_work
@@ -51,7 +51,7 @@ void InvertedIndex::removeDocument(size_t Id)
             entries.erase(std::remove_if(entries.begin(), entries.end(),
 
                                          [Id](const Entry& entry) {
-                                             return entry.docId == Id;//[]-объект,() у кого берет
+                                             return entry.docId == Id; //[]-объект,() у кого берет
                                          }),
                           entries.end());
 

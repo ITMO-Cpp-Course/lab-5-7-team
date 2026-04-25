@@ -69,7 +69,6 @@ TEST_CASE("Document with empty strings", "[document]")
 
 // создаем функцию проверки наличия структуры Entry с заданым айди и индексом
 
-
 bool containsEntry(const std::vector<Entry>& entries, size_t docId, size_t index)
 {
     auto it = std::find_if(entries.begin(), entries.end(),
