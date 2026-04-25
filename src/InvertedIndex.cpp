@@ -1,6 +1,6 @@
 #include "InvertedIndex.hpp"
 #include "DocumentBuilder.hpp"
-#include <algorithm> //для std::remove_if
+#include <algorithm>
 #include <string>
 #include <vector>
 namespace lab5::document_work

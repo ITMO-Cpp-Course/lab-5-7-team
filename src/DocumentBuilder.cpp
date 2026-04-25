@@ -4,11 +4,12 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
 namespace lab5::document_work
 {
-Document DocumentBuilder::Build(size_t id, const std::string& name, const std::string& text)
+Document DocumentBuilder::Build(size_t id, const std::string& name, const std::string& content)
 {
-    return Document(id, name, text);
+    return Document(id, name, content);
 }
 
 std::string DocumentBuilder::ToLower(const std::string& text)
@@ -16,7 +17,7 @@ std::string DocumentBuilder::ToLower(const std::string& text)
     std::string result = text;
     for (char& c : result)
     {
-        c = std::tolower(static_cast<unsigned char>(c)); //
+        c = std::tolower(static_cast<unsigned char>(c));
     }
     return result;
 }
