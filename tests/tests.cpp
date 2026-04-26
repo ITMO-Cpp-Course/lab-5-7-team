@@ -209,8 +209,8 @@ TEST_CASE("DocumentBuilder::SplitToWords splits text into words", "[DocumentBuil
     {
         auto words = DocumentBuilder::SplitToWords("hello, world!");
         REQUIRE(words.size() == 2);
-        REQUIRE(words[0] == "hello,");
-        REQUIRE(words[1] == "world!");
+        REQUIRE(words[0] == "hello");
+        REQUIRE(words[1] == "world");
     }
 
     SECTION("Newlines and tabs")
