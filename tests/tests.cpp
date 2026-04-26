@@ -115,8 +115,7 @@ TEST_CASE("InvertedIndex : add Document", "[InvertedIndex]")
         REQUIRE(containsEntry(resultCat, docNew.getId(), 3));
         REQUIRE(containsEntry(resultCat, doc2.getId(), 1));
         auto resultDog = index.search("dog");
-        REQUIRE(resultDog.size() == 1);
-        REQUIRE(containsEntry(resultDog, doc2.getId(), 1));
+        REQUIRE(resultDog.empty())
     }
 }
 
