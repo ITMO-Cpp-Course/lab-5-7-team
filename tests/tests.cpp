@@ -106,6 +106,18 @@ TEST_CASE("InvertedIndex : add Document", "[InvertedIndex]")
         auto result = index.search("surprise");
         REQUIRE(result.empty());
     }
+    SECTION("Same Id")
+    {
+        Document docNew(1, "docNew", "cat cat cat");
+        index.addDocument(docNew);
+        auto resultCat = index.search("cat");
+        REQUIRE(resultCat.size() == 2);
+        REQUIRE(containsEntry(resultCat, docNew.getId(), 3));
+        REQUIRE(containsEntry(resultCat, doc2.getId(), 1));
+        auto resultDog = index.search("dog");
+        REQUIRE(resultDog.size() == 1);
+        REQUIRE(containsEntry(resultDog, doc2.getId(), 1));
+    }
 }
 
 TEST_CASE("InvertedIndex: remove Document", "[invertedIndex]")
