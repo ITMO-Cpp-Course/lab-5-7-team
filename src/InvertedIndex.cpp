@@ -8,6 +8,10 @@ namespace lab5::document_work
 void InvertedIndex::addDocument(const Document& document)
 {
     size_t Id = document.getId();
+    if (documents_.find(Id) != documents_.end())
+    {
+        InvertedIndex::removeDocument(Id);
+    }
     std::string lower = DocumentBuilder::ToLower(document.getText());
     auto words = DocumentBuilder::SplitToWords(lower);
     documents_[Id] = std::make_shared<Document>(document);
@@ -49,7 +53,6 @@ void InvertedIndex::removeDocument(size_t Id)
         {
             std::vector<Entry>& entries = wordDoc->second;
             entries.erase(std::remove_if(entries.begin(), entries.end(),
-
                                          [Id](const Entry& entry) {
                                              return entry.docId == Id; //[]-объект,() у кого берет
                                          }),

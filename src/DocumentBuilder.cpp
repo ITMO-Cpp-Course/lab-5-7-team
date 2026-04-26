@@ -1,5 +1,6 @@
 #include "DocumentBuilder.hpp"
 #include "Document.hpp"
+#include <algorithm>
 #include <cctype>
 #include <sstream>
 #include <string>
@@ -68,7 +69,15 @@ std::vector<std::string> DocumentBuilder::SplitToWords(const std::string& text)
 
     while (ss >> word)
     {
-        words.push_back(word);
+        word.erase(
+            std::remove_if(word.begin(), word.end(),
+                           [](char c) { return std::ispunct(static_cast<unsigned char>(c)) && c != '-' && c != '\''; }),
+            word.end());
+
+        if (!word.empty())
+        {
+            words.push_back(word);
+        }
     }
 
     return words;

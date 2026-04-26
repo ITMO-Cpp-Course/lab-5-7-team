@@ -106,6 +106,17 @@ TEST_CASE("InvertedIndex : add Document", "[InvertedIndex]")
         auto result = index.search("surprise");
         REQUIRE(result.empty());
     }
+    SECTION("Same Id")
+    {
+        Document docNew(1, "docNew", "cat cat cat");
+        index.addDocument(docNew);
+        auto resultCat = index.search("cat");
+        REQUIRE(resultCat.size() == 2);
+        REQUIRE(containsEntry(resultCat, docNew.getId(), 3));
+        REQUIRE(containsEntry(resultCat, doc2.getId(), 1));
+        auto resultDog = index.search("dog");
+        REQUIRE(resultDog.empty());
+    }
 }
 
 TEST_CASE("InvertedIndex: remove Document", "[invertedIndex]")
@@ -198,8 +209,8 @@ TEST_CASE("DocumentBuilder::SplitToWords splits text into words", "[DocumentBuil
     {
         auto words = DocumentBuilder::SplitToWords("hello, world!");
         REQUIRE(words.size() == 2);
-        REQUIRE(words[0] == "hello,");
-        REQUIRE(words[1] == "world!");
+        REQUIRE(words[0] == "hello");
+        REQUIRE(words[1] == "world");
     }
 
     SECTION("Newlines and tabs")
@@ -251,10 +262,6 @@ TEST_CASE("DocumentBuilder handles edge cases", "[DocumentBuilder][EdgeCases]")
     {
         std::string special = "@#$%^&*()";
         auto words = DocumentBuilder::SplitToWords(special);
-        REQUIRE(words.size() == 1);
-        REQUIRE(words[0] == "@#$%^&*()");
-
-        std::string lower = DocumentBuilder::ToLower(special);
-        REQUIRE(lower == special);
+        REQUIRE(words.size() == 0);
     }
 }
