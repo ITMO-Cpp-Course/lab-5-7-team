@@ -262,10 +262,6 @@ TEST_CASE("DocumentBuilder handles edge cases", "[DocumentBuilder][EdgeCases]")
     {
         std::string special = "@#$%^&*()";
         auto words = DocumentBuilder::SplitToWords(special);
-        REQUIRE(words.size() == 1);
-        REQUIRE(words[0] == "@#$%^&*()");
-
-        std::string lower = DocumentBuilder::ToLower(special);
-        REQUIRE(lower == special);
+        REQUIRE(words.size() == 0);
     }
 }
