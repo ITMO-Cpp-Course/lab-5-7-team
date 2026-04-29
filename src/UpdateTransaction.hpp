@@ -3,6 +3,7 @@
 #include "InvertedIndex.hpp"
 #include "Result.hpp"
 #include <utility>
+#include <unordered_set>
 
 namespace lab_6 {
 
@@ -10,8 +11,7 @@ namespace lab_6 {
 
     class UpdateTransaction {
     public:
-        UpdateTransaction(IndexStore& store, std::unique_ptr<InvertedIndex> draft);
-
+        explicit UpdateTransaction(IndexStore& store);
         UpdateTransaction(const UpdateTransaction&) = delete;
         UpdateTransaction& operator=(const UpdateTransaction&) = delete;
 
@@ -28,7 +28,8 @@ namespace lab_6 {
 
     private:
         IndexStore& store_;
-        std::unique_ptr<InvertedIndex> draft_;
+        InvertedIndex draft_;                     // копия индекса
+        std::unordered_set<size_t> draftDocIds_;  // копия множества id
         bool committed_ = false;
     };
 

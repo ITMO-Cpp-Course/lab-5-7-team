@@ -3,7 +3,7 @@
 #include "InvertedIndex.hpp"
 #include "IndexError.hpp"
 #include "Result.hpp"
-
+#include <unordered_set>
 #include <memory>
 #include <vector>
 
@@ -23,15 +23,14 @@ class IndexStore
     Result<size_t> WordInDocument(const std::string& word, size_t docId) const;
 
     // Транзакция
-     Result<UpdateTransaction> beginTransaction();;
+     Result<UpdateTransaction> beginTransaction();
 
 
 
   private:
-    std::unique_ptr<InvertedIndex> index_;
-    bool transactionActive_ = false;   // true, если есть незавершённая транзакция
-    void rollbackTransaction();   // добавляем метод отката для сброса флага
-    void commitTransaction(std::unique_ptr<InvertedIndex> newIndex);   // Внутренний метод для транзакции
     friend class UpdateTransaction;
+    InvertedIndex invertedIndex_;
+    std::unordered_set<size_t> docIds_;
+    bool transactionActive_ = false;   // true, если существует активная транзакци
 };
 } // namespace lab_6

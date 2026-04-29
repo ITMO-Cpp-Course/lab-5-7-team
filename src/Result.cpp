@@ -21,4 +21,4 @@ const IndexError& Result<void>::error() const&
     return exp_.error();
 }
 
-} // namespace lab6
+} // namespace lab_6

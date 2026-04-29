@@ -18,7 +18,7 @@ std::string DocumentBuilder::ToLower(const std::string& text)
     std::string result = text;
     for (char& c : result)
     {
-        c = std::tolower(static_cast<unsigned char>(c));
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
     return result;
 }
@@ -28,7 +28,7 @@ std::string DocumentBuilder::ToUpper(const std::string& text)
     std::string result = text;
     for (char& c : result)
     {
-        c = std::toupper(static_cast<unsigned char>(c));
+        c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
     }
     return result;
 }
@@ -44,12 +44,12 @@ std::string DocumentBuilder::ToTitleWord(const std::string& text)
         {
             if (new_word)
             {
-                c = std::toupper(static_cast<unsigned char>(c));
+                c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
                 new_word = false;
             }
             else
             {
-                c = std::tolower(static_cast<unsigned char>(c));
+                c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
             }
         }
         else

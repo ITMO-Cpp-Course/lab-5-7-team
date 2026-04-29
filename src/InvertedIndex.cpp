@@ -99,7 +99,7 @@ size_t InvertedIndex::WordInDocument(const std::string& word, size_t Id) const
     }
     return 0;
 }
-    bool InvertedIndex::hasDocument(size_t id) const
+bool InvertedIndex::hasDocument(size_t id) const
 {
     return documents_.find(id) != documents_.end();
 }

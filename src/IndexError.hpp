@@ -15,4 +15,4 @@ namespace lab_6 {
         TransactionInvalidState,
     };
 
-} // namespace lab6
+} // namespace lab_6

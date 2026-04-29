@@ -5,21 +5,19 @@
 
 namespace lab_6
 {
-UpdateTransaction::UpdateTransaction(IndexStore& store, std::unique_ptr<InvertedIndex> draft)
-    : store_(&store), draft_(std::move(draft)), committed_(false)
+UpdateTransaction::UpdateTransaction(IndexStore& store)
+    : store_(store), draft_(store.invertedIndex_), draftDocIds_(store.docIds_)
 {
 }
-    // Деструктор: откат, если не был вызван commit
-    UpdateTransaction::~UpdateTransaction() {
-    if (!committed_ && store_) {
-        store_->rollbackTransaction();   // сброс флага активности
-        // draft_ удаляется автоматически
+UpdateTransaction::~UpdateTransaction() {
+    if (!committed_) {
+        // транзакция не была зафиксирована — сбрасываем флаг активности в хранилище
+        store_.transactionActive_ = false;
     }
 }
 UpdateTransaction::UpdateTransaction(UpdateTransaction&& other) noexcept
-    : store_(other.store_), draft_(std::move(other.draft_)), committed_(other.committed_)
+    : store_(other.store_), draft_(std::move(other.draft_)), draftDocIds_(std::move(other.draftDocIds_)), committed_(other.committed_)
 {
-    other.store_ = nullptr;
     other.committed_ = true;
 }
 
@@ -27,14 +25,10 @@ UpdateTransaction& UpdateTransaction::operator=(UpdateTransaction&& other) noexc
 {
     if (this != &other)
     {
-        if (!committed_ && store_) {
-            store_->rollbackTransaction();
-        }
         store_ = other.store_;
         draft_ = std::move(other.draft_);
         committed_ = other.committed_;
         other.committed_ = true;
-        other.store_ = nullptr;
 
     }
     return *this;
@@ -42,45 +36,49 @@ UpdateTransaction& UpdateTransaction::operator=(UpdateTransaction&& other) noexc
 
 Result<void> UpdateTransaction::addDocument(const Document& doc)
 {
-    if (committed_)
-    {
-        return IndexError::TransactionAlreadyCompleted;
+    if (committed_) {
+        return Result<void>(IndexError::TransactionAlreadyCompleted);
+    }
+    if (doc.getId() == 0) {
+        return Result<void>(IndexError::InvalidId);
     }
     if (doc.getName().empty() || doc.getText().empty())
     {
         return IndexError::DocumentAlreadyExists;
     }
-    if (draft_->hasDocument(doc.getId()))
-    {
-        return IndexError::DocumentAlreadyExists;
+    if (draftDocIds_.find(doc.getId()) != draftDocIds_.end()) {
+        return Result<void>(IndexError::DocumentAlreadyExists);
     }
-
-    std::string lowerText = DocumentBuilder::ToLower(doc.getText());
-    auto words = DocumentBuilder::SplitToWords(lowerText);
-    draft_->addDocument(doc, words);
-    return {};
+    // InvertedIndex::addDocument сам делает обработку текста
+    draft_.addDocument(doc);
+    draftDocIds_.insert(doc.getId());
+    return Result<void>();
 }
 
 Result<void> UpdateTransaction::removeDocument(size_t id)
 {
-    if (committed_)
-        return IndexError::TransactionAlreadyCompleted;
-    if (!draft_)
-        return IndexError::TransactionInvalidState;
-    if (!draft_->hasDocument(id))
-        return IndexError::DocumentNotFound;
-    draft_->removeDocument(id);
-    return {};
+    if (committed_) {
+        return Result<void>(IndexError::TransactionAlreadyCompleted);
+    }
+    if (id == 0) {
+        return Result<void>(IndexError::InvalidId);
+    }
+    if (draftDocIds_.find(id) == draftDocIds_.end()) {
+        return Result<void>(IndexError::DocumentNotFound);
+    }
+    draft_.removeDocument(id);
+    draftDocIds_.erase(id);
+    return Result<void>();
 }
 
-void UpdateTransaction::сommit()
+void UpdateTransaction::commit()
 {
-    if (committed_) return;
-    if (store_)
+    if (!committed_)
     {
-        store_->commitTransaction(std::move(draft_));
+        store_.invertedIndex_ = std::move(draft_);
+        store_.docIds_ = std::move(draftDocIds_);
         committed_ = true;
-        store_ = nullptr;   // чтобы деструктор не пытался откатить
+        store_.transactionActive_ = false;   // транзакция завершена
     }
 }
 } // namespace lab_6

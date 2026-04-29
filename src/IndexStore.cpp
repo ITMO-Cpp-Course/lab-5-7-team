@@ -5,90 +5,75 @@
 namespace lab_6
 {
 
-IndexStore::IndexStore() : index_(std::make_unique<InvertedIndex>()) {}
+IndexStore::IndexStore() = default;
 
 Result<void> IndexStore::addDocument(const Document& doc)
 {
-    if (transactionActive_)
-    {
-        return IndexError::TransactionAlreadyActive;
+    if (transactionActive_) {
+        return Result<void>(IndexError::TransactionAlreadyActive);
+    }
+    if (doc.getId() == 0) {
+        return Result<void>(IndexError::InvalidId);
     }
     // Проверка на пустой документ
     if (doc.getName().empty() || doc.getText().empty())
     {
-        return IndexError::InvalidDocument;
+        return Result<void>(IndexError::InvalidDocument);
+    }
+    if (docIds_.find(doc.getId()) != docIds_.end()) {
+        return Result<void>(IndexError::DocumentAlreadyExists);
     }
 
-    // Проверка на дубликат ID
-    if (index_->hasDocument(doc.getId()))
-    {
-        return IndexError::DocumentAlreadyExists;
-    }
-
-    // Обработка текста
-    std::string lowerText = DocumentBuilder::ToLower(doc.getText());
-    auto words = DocumentBuilder::SplitToWords(lowerText);
-
-    // Добавление в индекс
-    index_->addDocument(doc, words);
-
-    return {};
+    invertedIndex_.addDocument(doc);   // метод InvertedIndex принимает только один аргумент
+    docIds_.insert(doc.getId());
+    return Result<void>();
 }
 
 Result<void> IndexStore::removeDocument(size_t docId)
 {
-        if (transactionActive_)
-        {
-            return IndexError::TransactionAlreadyActive;
-        }
-    if (!index_->hasDocument(docId))
-    {
-        return IndexError::DocumentNotFound;
+    if (transactionActive_) {
+        return Result<void>(IndexError::TransactionAlreadyActive);
+    }
+    if (docId == 0) {
+        return Result<void>(IndexError::InvalidId);
+    }
+    // Проверка на пустой документ
+    if (docIds_.find(docId) == docIds_.end()) {
+        return Result<void>(IndexError::DocumentNotFound);
     }
 
-    index_->removeDocument(docId);
-    return {};
+    invertedIndex_.removeDocument(docId);
+    docIds_.erase(docId);
+    return Result<void>();
 }
 
 Result<std::vector<Entry>> IndexStore::search(const std::string& word) const
 {
         if (word.empty())
         {
-            return IndexError::EmptyWord;
+            return Result<std::vector<Entry>>(IndexError::EmptyWord);
         }
 
-    return index_->search(word);
+        return Result<std::vector<Entry>>(invertedIndex_.search(word));
 }
 
 Result<size_t> IndexStore::WordInDocument(const std::string& word, size_t docId) const
 {
-    // Если документа нет, вернём 0
-    if (!index_->hasDocument(docId))
-    {
-        return IndexError::DocumentNotFound;
+    if (word.empty()) {
+        return Result<size_t>(IndexError::EmptyWord);
     }
-    return index_->WordInDocument(word, docId);
+    if (docId == 0) {
+        return Result<size_t>(IndexError::InvalidId);
+    }
+    if (docIds_.find(docId) == docIds_.end()) {
+        return Result<size_t>(IndexError::DocumentNotFound);
+    }
+    return Result<size_t>(invertedIndex_.WordInDocument(word, docId));
 }
-
-
-    Result<UpdateTransaction> IndexStore::beginTransaction()
-    {
-        if (transactionActive_) {
-            return IndexError::TransactionAlreadyActive;
-        }
-        transactionActive_ = true;
-        auto draft = std::make_unique<InvertedIndex>(*index_);  // копия
-        return UpdateTransaction(*this, std::move(draft));
-    }
-
-    void IndexStore::rollbackTransaction() {
-        transactionActive_ = false;
-        // draft_ в UpdateTransaction уже уничтожен (или будет) - здесь только сброс флага
-    }
-
-    void IndexStore::commitTransaction(std::unique_ptr<InvertedIndex> newIndex) {
-        index_ = std::move(newIndex);
-        transactionActive_ = false;
-    }
+Result<UpdateTransaction> IndexStore::beginTransaction()
+{
+    transactionActive_ = true;
+    return UpdateTransaction(*this);
+}
 
 } // namespace lab_6

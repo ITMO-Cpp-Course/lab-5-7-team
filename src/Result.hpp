@@ -28,6 +28,7 @@ class Result
 
     const T& value() const& { return exp_.value(); }
     const IndexError& error() const { return exp_.error(); } // только для долгоживущих тк & (ref-квалификатор)
+    T&& value() && {return std::move(exp_.value()); }
 };
 
 template <>

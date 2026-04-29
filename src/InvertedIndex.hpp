@@ -23,6 +23,8 @@ class InvertedIndex
   public:
     InvertedIndex() = default;
     InvertedIndex(const InvertedIndex& other);
+    InvertedIndex& operator=(const InvertedIndex&) = default;
+    InvertedIndex& operator=(InvertedIndex&&) = default;
     void addDocument(const Document& document);
     void removeDocument(size_t Id);
     std::vector<Entry> search(const std::string& word) const;
