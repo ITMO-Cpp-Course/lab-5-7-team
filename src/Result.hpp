@@ -1,15 +1,9 @@
 #pragma once
 #include <expected>
-#include <string>
 #include <type_traits>
-
-namespace lab6
+#include "IndexError.hpp"
+namespace lab_6
 {
-struct IndexError
-{
-    std::string message;
-}; // строка оповещения об ошибке
-
 template <typename T>
 // следующий класс с параметром типа Т (может быть число, вектор, строка)
 
@@ -26,14 +20,14 @@ class Result
     Result() = delete;
     // удаляем конструктор - не может быть пустой объект
 
-    Result(T value) noexcept(std::is_nothrow_move_constructible_v<T>);
+    Result(T value) noexcept(std::is_nothrow_move_constructible_v<T>) : exp_(std::move(value)) {}
     // если noexcept(false) - разрешены исключения(в итоге Result не создаем)
-    Result(IndexError error) noexcept;
+    Result(IndexError error) noexcept : exp_(std::unexpected(error)) {}
 
-    bool has_value() const noexcept;
+    bool has_value() const noexcept { return exp_.has_value(); }
 
-    const T& value() const&;
-    const IndexError& error() const&; // только для долгоживущих тк & (ref-квалификатор)
+    const T& value() const& { return exp_.value(); }
+    const IndexError& error() const { return exp_.error(); } // только для долгоживущих тк & (ref-квалификатор)
 };
 
 template <>

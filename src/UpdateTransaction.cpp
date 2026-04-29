@@ -5,95 +5,82 @@
 
 namespace lab_6
 {
-UpdateTransaction::UpdateTransaction(IndexStore& store)
-    : store_(&store), clone_(std::make_unique<InvertedIndex>(*store.index_)), committed_(false)
+UpdateTransaction::UpdateTransaction(IndexStore& store, std::unique_ptr<InvertedIndex> draft)
+    : store_(&store), draft_(std::move(draft)), committed_(false)
 {
 }
-
+    // Деструктор: откат, если не был вызван commit
+    UpdateTransaction::~UpdateTransaction() {
+    if (!committed_ && store_) {
+        store_->rollbackTransaction();   // сброс флага активности
+        // draft_ удаляется автоматически
+    }
+}
 UpdateTransaction::UpdateTransaction(UpdateTransaction&& other) noexcept
-    : store_(other.store_), clone_(std::move(other.clone_)), committed_(other.committed_)
+    : store_(other.store_), draft_(std::move(other.draft_)), committed_(other.committed_)
 {
     other.store_ = nullptr;
-    other.committed_ = false;
+    other.committed_ = true;
 }
 
 UpdateTransaction& UpdateTransaction::operator=(UpdateTransaction&& other) noexcept
 {
     if (this != &other)
     {
+        if (!committed_ && store_) {
+            store_->rollbackTransaction();
+        }
         store_ = other.store_;
-        clone_ = std::move(other.clone_);
+        draft_ = std::move(other.draft_);
         committed_ = other.committed_;
+        other.committed_ = true;
         other.store_ = nullptr;
-        other.committed_ = false;
+
     }
     return *this;
 }
 
-UpdateTransaction::~UpdateTransaction()
-{
-    if (!committed_ && store_)
-    {
-        // просто уничтожаем clone_, не применяя изменения
-    }
-}
-
 Result<void> UpdateTransaction::addDocument(const Document& doc)
 {
-    if (!clone_)
+    if (committed_)
     {
-        return IndexError{"Transaction is in invalid state"};
+        return IndexError::TransactionAlreadyCompleted;
     }
     if (doc.getName().empty() || doc.getText().empty())
     {
-        return IndexError{"Invalid document: empty name or text"};
+        return IndexError::DocumentAlreadyExists;
     }
-    if (clone_->hasDocument(doc.getId()))
+    if (draft_->hasDocument(doc.getId()))
     {
-        return IndexError{"Duplicate document ID: " + std::to_string(doc.getId())};
+        return IndexError::DocumentAlreadyExists;
     }
 
     std::string lowerText = DocumentBuilder::ToLower(doc.getText());
     auto words = DocumentBuilder::SplitToWords(lowerText);
-    clone_->addDocument(doc, words);
+    draft_->addDocument(doc, words);
     return {};
 }
 
-Result<void> UpdateTransaction::removeDocument(size_t docId)
+Result<void> UpdateTransaction::removeDocument(size_t id)
 {
-    if (!clone_)
-    {
-        return IndexError{"Transaction is in invalid state"};
-    }
-    if (!clone_->hasDocument(docId))
-    {
-        return IndexError{"Document not found: ID " + std::to_string(docId)};
-    }
-
-    clone_->removeDocument(docId);
+    if (committed_)
+        return IndexError::TransactionAlreadyCompleted;
+    if (!draft_)
+        return IndexError::TransactionInvalidState;
+    if (!draft_->hasDocument(id))
+        return IndexError::DocumentNotFound;
+    draft_->removeDocument(id);
     return {};
 }
 
-Result<std::vector<Entry>> UpdateTransaction::search(const std::string& word) const
+void UpdateTransaction::сommit()
 {
-    if (!clone_)
+    if (committed_) return;
+    if (store_)
     {
-        return IndexError{"Transaction is in invalid state"};
+        store_->commitTransaction(std::move(draft_));
+        committed_ = true;
+        store_ = nullptr;   // чтобы деструктор не пытался откатить
     }
-    return clone_->search(word);
-}
-
-Result<void> UpdateTransaction::сommit()
-{
-    if (!store_ || committed_)
-    {
-        return IndexError{"Cannot commit: transaction is already committed or invalid"};
-    }
-
-    // Заменяем индекс в хранилище на наш клон
-    store_->assignIndex(std::move(clone_));
-    committed_ = true;
-    store_ = nullptr;
-    return {};
 }
 } // namespace lab_6

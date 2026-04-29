@@ -27,6 +27,7 @@ class InvertedIndex
     void removeDocument(size_t Id);
     std::vector<Entry> search(const std::string& word) const;
     size_t WordInDocument(const std::string& word, size_t docId) const;
+    bool hasDocument(size_t id) const;
 
   private:
     std::unordered_map<std::string, std::vector<Entry>> invertedIndex_;

@@ -1,39 +1,35 @@
 #pragma once
+
+#include "InvertedIndex.hpp"
 #include "Result.hpp"
-#include <memory>
-#include <vector>
+#include <utility>
 
-namespace lab_6
-{
-class InvertedIndex;
-class Document;
-struct Entry;
-class IndexStore;
+namespace lab_6 {
 
-class UpdateTransaction
-{
-  public:
-    explicit UpdateTransaction(IndexStore& store);
+    class IndexStore;
 
-    UpdateTransaction(const UpdateTransaction&) = delete;
-    UpdateTransaction& operator=(const UpdateTransaction&) = delete;
+    class UpdateTransaction {
+    public:
+        UpdateTransaction(IndexStore& store, std::unique_ptr<InvertedIndex> draft);
 
-    UpdateTransaction(UpdateTransaction&& other) noexcept;
-    UpdateTransaction& operator=(UpdateTransaction&& other) noexcept;
+        UpdateTransaction(const UpdateTransaction&) = delete;
+        UpdateTransaction& operator=(const UpdateTransaction&) = delete;
 
-    ~UpdateTransaction();
+        UpdateTransaction(UpdateTransaction&& other) noexcept;
+        UpdateTransaction& operator=(UpdateTransaction&& other) noexcept;
 
-    // Операции над клоном
-    Result<void> addDocument(const Document& doc);
-    Result<void> removeDocument(size_t docId);
-    Result<std::vector<Entry>> search(const std::string& word) const;
+        ~UpdateTransaction();
 
-    // Фиксация
-    Result<void> сommit();
+        Result<void> addDocument(const Document& doc);
+        Result<void> removeDocument(size_t id);
 
-  private:
-    IndexStore* store_;
-    std::unique_ptr<InvertedIndex> clone_;
-    bool committed_;
-};
+        void commit();
+        bool isCommitted() const { return committed_; }
+
+    private:
+        IndexStore& store_;
+        std::unique_ptr<InvertedIndex> draft_;
+        bool committed_ = false;
+    };
+
 } // namespace lab_6

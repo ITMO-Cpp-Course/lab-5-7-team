@@ -1,7 +1,7 @@
 #include "Document.hpp"
 #include "InvertedIndex.hpp"
 #include <catch2/catch_all.hpp>
-using namespace lab5::document_work;
+using namespace lab_6;
 
 TEST_CASE("Document constructor and getters", "[document]")
 {

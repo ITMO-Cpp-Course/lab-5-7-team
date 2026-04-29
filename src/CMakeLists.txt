@@ -1,18 +1,23 @@
-add_library(src STATIC
-    Document.cpp
-    DocumentBuilder.cpp
-    InvertedIndex.cpp
-    IndexStore.cpp
-    UpdateTransaction.cpp
-    Result.cpp
+add_library(Document STATIC
+        Document.cpp
+        IndexError.hpp
 )
 
-target_link_libraries(src PRIVATE project_warnings)
-if (TARGET project_sanitizers)
-        target_link_libraries(src PRIVATE project_sanitizers)
-endif ()
-
-target_include_directories(src
-        PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+add_library(DocumentBuilder STATIC
+        DocumentBuilder.cpp
 )
+
+add_library(InvertedIndex STATIC
+        InvertedIndex.cpp
+)
+
+target_link_libraries(DocumentBuilder PRIVATE Document)
+target_link_libraries(InvertedIndex PRIVATE Document DocumentBuilder project_warnings)
+
+target_include_directories(Document PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(DocumentBuilder PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(InvertedIndex PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+if (ENABLE_SANITIZERS AND NOT WIN32)
+    target_link_libraries(InvertedIndex PRIVATE project_sanitizers)
+endif()
