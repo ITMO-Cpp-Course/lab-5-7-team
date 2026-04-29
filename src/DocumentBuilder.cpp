@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace lab5::document_work
+namespace lab_6
 {
 Document DocumentBuilder::Build(size_t id, const std::string& name, const std::string& content)
 {
@@ -82,4 +82,4 @@ std::vector<std::string> DocumentBuilder::SplitToWords(const std::string& text)
 
     return words;
 }
-} // namespace lab5::document_work
+} // namespace lab_6

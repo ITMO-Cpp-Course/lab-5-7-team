@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace lab5::document_work
+namespace lab_6
 {
 class Document;
 class DocumentBuilder;
@@ -21,6 +21,8 @@ struct Entry
 class InvertedIndex
 {
   public:
+    InvertedIndex() = default;
+    InvertedIndex(const InvertedIndex& other);
     void addDocument(const Document& document);
     void removeDocument(size_t Id);
     std::vector<Entry> search(const std::string& word) const;
@@ -31,4 +33,4 @@ class InvertedIndex
     std::unordered_map<size_t, std::shared_ptr<Document>> documents_;
 };
 
-} // namespace lab5::document_work
+} // namespace lab_6

@@ -1,4 +1,4 @@
-#include "Document.hpp" //
+#include "Document.hpp"
 #include "InvertedIndex.hpp"
 #include <catch2/catch_all.hpp>
 using namespace lab5::document_work;
