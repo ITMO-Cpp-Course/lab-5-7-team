@@ -5,11 +5,12 @@
 #include <utility>
 #include <unordered_set>
 
-namespace lab_6 {
-
+namespace lab_6
+{
     class IndexStore;
 
-    class UpdateTransaction {
+    class UpdateTransaction
+    {
     public:
         explicit UpdateTransaction(IndexStore& store);
         UpdateTransaction(const UpdateTransaction&) = delete;
@@ -28,9 +29,8 @@ namespace lab_6 {
 
     private:
         IndexStore& store_;
-        InvertedIndex draft_;                     // копия индекса
-        std::unordered_set<size_t> draftDocIds_;  // копия множества id
+        InvertedIndex draft_; // копия индекса
+        std::unordered_set<size_t> draftDocIds_; // копия множества id
         bool committed_ = false;
     };
-
 } // namespace lab_6

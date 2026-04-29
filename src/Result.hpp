@@ -2,54 +2,59 @@
 #include <expected>
 #include <type_traits>
 #include "IndexError.hpp"
+
 namespace lab_6
 {
-template <typename T>
-// следующий класс с параметром типа Т (может быть число, вектор, строка)
+    template <typename T>
+    // следующий класс с параметром типа Т (может быть число, вектор, строка)
 
-class Result
-{
-  private:
-    std::expected<T, IndexError> exp_;
+    class Result
+    {
+    private:
+        std::expected<T, IndexError> exp_;
 
-  public:
-    using value_type = T;
-    // выдает какой тип у Т, если нет ошибки
-    using error_type = IndexError;
+    public:
+        using value_type = T;
+        // выдает какой тип у Т, если нет ошибки
+        using error_type = IndexError;
 
-    Result() = delete;
-    // удаляем конструктор - не может быть пустой объект
+        Result() = delete;
+        // удаляем конструктор - не может быть пустой объект
 
-    Result(T value) noexcept(std::is_nothrow_move_constructible_v<T>) : exp_(std::move(value)) {}
-    // если noexcept(false) - разрешены исключения(в итоге Result не создаем)
-    Result(IndexError error) noexcept : exp_(std::unexpected(error)) {}
+        Result(T value) noexcept(std::is_nothrow_move_constructible_v<T>) : exp_(std::move(value))
+        {
+        }
 
-    bool has_value() const noexcept { return exp_.has_value(); }
+        // если noexcept(false) - разрешены исключения(в итоге Result не создаем)
+        Result(IndexError error) noexcept : exp_(std::unexpected(error))
+        {
+        }
 
-    const T& value() const& { return exp_.value(); }
-    const IndexError& error() const { return exp_.error(); } // только для долгоживущих тк & (ref-квалификатор)
-    T&& value() && {return std::move(exp_.value()); }
-};
+        bool has_value() const noexcept { return exp_.has_value(); }
 
-template <>
-// обязательно для написания для уточнения шаблона следующего класса
-class Result<void>
-{
-  private:
-    std::expected<void, IndexError> exp_;
+        const T& value() const & { return exp_.value(); }
+        const IndexError& error() const { return exp_.error(); } // только для долгоживущих тк & (ref-квалификатор)
+        T&& value() && { return std::move(exp_.value()); }
+    };
 
-  public:
-    using value_type = void;
-    using error_type = IndexError;
+    template <>
+    // обязательно для написания для уточнения шаблона следующего класса
+    class Result<void>
+    {
+    private:
+        std::expected<void, IndexError> exp_;
 
-    Result() noexcept;
-    // наоборот, создаем пустой результат
-    Result(IndexError error) noexcept;
+    public:
+        using value_type = void;
+        using error_type = IndexError;
 
-    bool has_value() const noexcept;
+        Result() noexcept;
+        // наоборот, создаем пустой результат
+        Result(IndexError error) noexcept;
 
-    void value() const;
-    const IndexError& error() const&;
-};
+        bool has_value() const noexcept;
 
+        void value() const;
+        const IndexError& error() const &;
+    };
 } // namespace lab6
