@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace lab5::document_work
+namespace lab_6
 {
 
 class DocumentBuilder
@@ -21,7 +21,6 @@ class DocumentBuilder
     static std::string ToTitleWord(const std::string& text); // первые буквы заглавные
 
     static std::vector<std::string> SplitToWords(const std::string& text); // разбивка на слова
-    // статический метод принадлежит самому классу, нельзя обращаться к this - не статичесим полям
 };
 
-} // namespace lab5::document_work
+} // namespace lab_6

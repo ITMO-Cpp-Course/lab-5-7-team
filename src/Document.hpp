@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-namespace lab5::document_work
+namespace lab_6
 {
 class Document
 {
@@ -16,4 +16,4 @@ class Document
     std::string name_;
     std::string text_;
 };
-} // namespace lab5::document_work
+} // namespace lab_6

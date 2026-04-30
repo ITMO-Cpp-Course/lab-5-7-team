@@ -19,9 +19,7 @@ target_include_directories(resource_tests PRIVATE
 )
 
 target_link_libraries(resource_tests PRIVATE
-        InvertedIndex
-        Document
-        DocumentBuilder
+        src
         project_warnings
         Catch2::Catch2WithMain
 )

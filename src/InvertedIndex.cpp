@@ -3,8 +3,15 @@
 #include <algorithm>
 #include <string>
 #include <vector>
-namespace lab5::document_work
+
+namespace lab_6
 {
+InvertedIndex::InvertedIndex(const InvertedIndex& other)
+    : invertedIndex_(other.invertedIndex_),
+      documents_(other.documents_) // если используется shared_ptr, копия разделяемая
+{
+}
+
 void InvertedIndex::addDocument(const Document& document)
 {
     size_t Id = document.getId();
@@ -95,4 +102,8 @@ size_t InvertedIndex::WordInDocument(const std::string& word, size_t Id) const
     return 0;
 }
 
-} // namespace lab5::document_work
+bool InvertedIndex::hasDocument(size_t id) const
+{
+    return documents_.find(id) != documents_.end();
+}
+} // namespace lab_6

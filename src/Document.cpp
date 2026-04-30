@@ -1,5 +1,5 @@
 #include "Document.hpp"
-namespace lab5::document_work
+namespace lab_6
 {
 Document::Document(size_t id, const std::string& name, const std::string& text)
     : id_(id), name_(name), text_(text) // Инициализируем поля
@@ -20,4 +20,4 @@ const std::string& Document::getText() const
 {
     return text_;
 }
-} // namespace lab5::document_work
+} // namespace lab_6

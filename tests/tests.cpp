@@ -1,7 +1,10 @@
-#include "Document.hpp" //
+#include "Document.hpp"
+#include "IndexError.hpp"
+#include "IndexStore.hpp"
 #include "InvertedIndex.hpp"
+#include "UpdateTransaction.hpp"
 #include <catch2/catch_all.hpp>
-using namespace lab5::document_work;
+using namespace lab_6;
 
 TEST_CASE("Document constructor and getters", "[document]")
 {
@@ -264,4 +267,178 @@ TEST_CASE("DocumentBuilder handles edge cases", "[DocumentBuilder][EdgeCases]")
         auto words = DocumentBuilder::SplitToWords(special);
         REQUIRE(words.size() == 0);
     }
+}
+TEST_CASE("IndexStore: add and search document", "[IndexStore]")
+{
+    // Проверяет, что документ добавляется, и слово находится с правильной частотой
+    IndexStore store;
+    Document doc(1, "test.txt", "hello world hello");
+    REQUIRE(store.addDocument(doc).has_value());
+
+    auto result = store.search("hello");
+    REQUIRE(result.has_value());
+    const auto& vec = result.value();
+    REQUIRE(vec.size() == 1);
+    REQUIRE(containsEntry(vec, 1, 2));
+}
+
+TEST_CASE("IndexStore: remove document", "[IndexStore]")
+{
+    // Проверяет удаление документа: после удаления слово не ищется
+    IndexStore store;
+    Document doc(1, "doc", "apple");
+    store.addDocument(doc);
+    REQUIRE(store.removeDocument(1).has_value());
+
+    auto res = store.search("apple");
+    REQUIRE(res.value().empty());
+}
+
+TEST_CASE("IndexStore: duplicate ID error", "[IndexStore]")
+{
+    // При добавлении документа с уже существующим ID возвращается ошибка
+    IndexStore store;
+    Document doc(1, "doc", "text");
+    store.addDocument(doc);
+    auto res = store.addDocument(doc);
+    REQUIRE_FALSE(res.has_value());
+    REQUIRE(res.error() == IndexError::DocumentAlreadyExists);
+}
+
+TEST_CASE("IndexStore: empty word search error", "[IndexStore]")
+{
+    // Поиск по пустому слову возвращает ошибку EmptyWord
+    IndexStore store;
+    auto res = store.search("");
+    REQUIRE_FALSE(res.has_value());
+    REQUIRE(res.error() == IndexError::EmptyWord);
+}
+
+TEST_CASE("IndexStore: wordCount for existing and missing doc", "[IndexStore]")
+{
+    // Проверяет частоту слова в существующем документе и ошибку для несуществующего
+    IndexStore store;
+    Document doc(1, "doc", "three three three");
+    store.addDocument(doc);
+
+    auto cnt = store.WordInDocument("three", 1);
+    REQUIRE(cnt.has_value());
+    REQUIRE(cnt.value() == 3);
+
+    auto cnt2 = store.WordInDocument("three", 999);
+    REQUIRE_FALSE(cnt2.has_value());
+    REQUIRE(cnt2.error() == IndexError::DocumentNotFound);
+}
+TEST_CASE("Transaction: changes invisible before commit, visible after", "[transaction]")
+{
+    // Изменения внутри транзакции не видны через IndexStore до вызова commit()
+    IndexStore store;
+    Document doc(1, "doc", "fruit");
+
+    auto txRes = store.beginTransaction();
+    REQUIRE(txRes.has_value());
+    auto tx = std::move(txRes).value();
+    REQUIRE(tx.addDocument(doc).has_value());
+
+    auto before = store.search("fruit");
+    REQUIRE(before.value().empty());
+
+    tx.commit();
+
+    auto after = store.search("fruit");
+    REQUIRE(after.value().size() == 1);
+}
+
+TEST_CASE("Transaction: automatic rollback if no commit", "[transaction]")
+{
+    // При разрушении транзакции без commit() изменения откатываются
+    IndexStore store;
+    Document doc(1, "doc", "data");
+
+    {
+        auto txRes = store.beginTransaction();
+        auto tx = std::move(txRes).value();
+        tx.addDocument(doc);
+    } // tx уничтожается – откат
+
+    auto res = store.search("data");
+    REQUIRE(res.value().empty());
+}
+
+TEST_CASE("Transaction: delete document inside transaction", "[transaction]")
+{
+    // Удаление документа внутри транзакции, затем commit – документ удаляется
+    IndexStore store;
+    Document doc(1, "doc", "remove me");
+    store.addDocument(doc);
+
+    auto txRes = store.beginTransaction();
+    auto tx = std::move(txRes).value();
+    REQUIRE(tx.removeDocument(1).has_value());
+    tx.commit();
+
+    auto res = store.search("remove");
+    REQUIRE(res.value().empty());
+}
+
+TEST_CASE("Transaction: error inside transaction causes full rollback", "[transaction]")
+{
+    // Если внутри транзакции произошла ошибка (например, дубликат), все изменения откатываются
+    IndexStore store;
+    Document doc1(1, "doc1", "a");
+    Document doc2(2, "doc2", "b");
+
+    auto txRes = store.beginTransaction();
+    auto tx = std::move(txRes).value();
+    tx.addDocument(doc1).has_value();
+    auto dup = tx.addDocument(doc1); // дубликат – ошибка
+    REQUIRE_FALSE(dup.has_value());
+    // Не вызываем commit, tx разрушится – doc1 не останется
+
+    REQUIRE(store.search("a").value().empty());
+}
+
+TEST_CASE("Error: direct modification when transaction active", "[errors]")
+{
+    // Прямой вызов addDocument/removeDocument запрещён, если транзакция уже начата
+    IndexStore store;
+    Document doc(1, "doc", "blocked");
+
+    auto txRes = store.beginTransaction();
+    auto tx = std::move(txRes).value();
+
+    auto res = store.addDocument(doc);
+    REQUIRE_FALSE(res.has_value());
+    REQUIRE(res.error() == IndexError::TransactionAlreadyActive);
+}
+
+TEST_CASE("Error: modification after commit", "[errors]")
+{
+    // После коммита транзакция не должна позволять дальнейшие изменения
+    IndexStore store;
+    Document doc(1, "doc", "done");
+
+    auto txRes = store.beginTransaction();
+    auto tx = std::move(txRes).value();
+    tx.addDocument(doc);
+    tx.commit();
+
+    auto res = tx.addDocument(doc);
+    REQUIRE_FALSE(res.has_value());
+    REQUIRE(res.error() == IndexError::TransactionAlreadyCompleted);
+}
+
+TEST_CASE("Error: invalid document (empty name or text)", "[errors]")
+{
+    // Документ с пустым именем или текстом считается невалидным
+    IndexStore store;
+    Document emptyName(1, "", "content");
+    Document emptyText(2, "name", "");
+
+    auto res1 = store.addDocument(emptyName);
+    auto res2 = store.addDocument(emptyText);
+    REQUIRE_FALSE(res1.has_value());
+    REQUIRE(res1.error() == IndexError::InvalidDocument);
+    REQUIRE_FALSE(res2.has_value());
+    REQUIRE(res2.error() == IndexError::InvalidDocument);
 }
