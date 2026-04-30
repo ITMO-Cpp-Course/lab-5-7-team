@@ -30,6 +30,7 @@ UpdateTransaction& UpdateTransaction::operator=(UpdateTransaction&& other) noexc
     {
         store_ = other.store_;
         draft_ = std::move(other.draft_);
+        draftDocIds_ = std::move(other.draftDocIds_);
         committed_ = other.committed_;
         other.committed_ = true;
     }
@@ -48,7 +49,7 @@ Result<void> UpdateTransaction::addDocument(const Document& doc)
     }
     if (doc.getName().empty() || doc.getText().empty())
     {
-        return IndexError::DocumentAlreadyExists;
+        return Result<void>(IndexError::DocumentAlreadyExists);
     }
     if (draftDocIds_.find(doc.getId()) != draftDocIds_.end())
     {

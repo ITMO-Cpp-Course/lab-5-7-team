@@ -81,6 +81,10 @@ Result<size_t> IndexStore::WordInDocument(const std::string& word, size_t docId)
 }
 Result<UpdateTransaction> IndexStore::beginTransaction()
 {
+    if (transactionActive_)
+    {
+        return Result<UpdateTransaction>(IndexError::TransactionAlreadyActive);
+    }
     transactionActive_ = true;
     return UpdateTransaction(*this);
 }
