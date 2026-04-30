@@ -1,7 +1,444 @@
+#include "Document.hpp"
+#include "IndexError.hpp"
+#include "IndexStore.hpp"
+#include "InvertedIndex.hpp"
+#include "UpdateTransaction.hpp"
 #include <catch2/catch_all.hpp>
+using namespace lab_6;
 
-// TODO: Your code
-TEST_CASE("Test case name", "[some_tag]")
+TEST_CASE("Document constructor and getters", "[document]")
 {
-    REQUIRE(false);
+    Document doc(1, "file.txt", "Hello world");
+
+    REQUIRE(doc.getId() == 1);
+    REQUIRE(doc.getName() == "file.txt");
+    REQUIRE(doc.getText() == "Hello world");
+}
+
+TEST_CASE("Document getters return const references", "[document]")
+{
+    Document doc(2, "file.txt", "content");
+
+    // Два вызова getName должны вернуть ссылку на один и тот же объект
+    const std::string& ref1 = doc.getName();
+    const std::string& ref2 = doc.getName();
+    REQUIRE(&ref1 == &ref2);
+
+    const std::string& ref3 = doc.getText();
+    const std::string& ref4 = doc.getText();
+    REQUIRE(&ref3 == &ref4);
+}
+
+TEST_CASE("Document copy", "[document]")
+{
+    Document original(3, "original.txt", "content");
+    Document copy = original; // проверка конструктора копирования
+
+    REQUIRE(copy.getId() == original.getId());
+    REQUIRE(copy.getName() == original.getName());
+    REQUIRE(copy.getText() == original.getText());
+
+    // Копия должна иметь собственные строки (адреса разные)
+    REQUIRE(&copy.getName() != &original.getName());
+    REQUIRE(&copy.getText() != &original.getText());
+}
+
+TEST_CASE("Document move", "[document]")
+{
+    Document original(4, "move.txt", "content");
+    Document moved = std::move(original); // конструктор перемещения
+
+    // moved получает все данные
+    REQUIRE(moved.getId() == 4);
+    REQUIRE(moved.getName() == "move.txt");
+    REQUIRE(moved.getText() == "content");
+
+    // original остаётся в валидном, но неопределённом состоянии.
+    // Стандарт гарантирует, что перемещённые std::string становятся пустыми.
+    REQUIRE(original.getName().empty());
+    REQUIRE(original.getText().empty());
+    // id (size_t) не меняется
+    REQUIRE(original.getId() == 4);
+}
+
+TEST_CASE("Document with empty strings", "[document]")
+{
+    Document doc(0, "", "");
+
+    REQUIRE(doc.getId() == 0);
+    REQUIRE(doc.getName().empty());
+    REQUIRE(doc.getText().empty());
+}
+
+// создаем функцию проверки наличия структуры Entry с заданым айди и индексом
+
+bool containsEntry(const std::vector<Entry>& entries, size_t docId, size_t index)
+{
+    auto it = std::find_if(entries.begin(), entries.end(),
+                           [docId, index](const Entry& e) { return e.docId == docId && e.index == index; });
+    if (it == entries.end())
+    {
+        return false; // элемент не найден
+    }
+    return true; // найден – проверяем счётчик
+}
+TEST_CASE("InvertedIndex : add Document", "[InvertedIndex]")
+{
+    InvertedIndex index;
+    Document doc1(1, "doc1", "cat dog cat");
+    Document doc2(2, "doc2", "cat");
+    index.addDocument(doc1);
+    index.addDocument(doc2);
+
+    SECTION("Cat")
+    {
+        auto result = index.search("cat");
+        // возвращает структуру Entry
+        REQUIRE(result.size() == 2);
+        REQUIRE(containsEntry(result, doc1.getId(), 2));
+        REQUIRE(containsEntry(result, doc2.getId(), 1));
+    }
+    SECTION("Dog")
+    {
+        auto result = index.search("dog");
+        REQUIRE(result.size() == 1);
+        REQUIRE(containsEntry(result, doc1.getId(), 1));
+    }
+    SECTION("No word")
+    {
+        auto result = index.search("surprise");
+        REQUIRE(result.empty());
+    }
+    SECTION("Same Id")
+    {
+        Document docNew(1, "docNew", "cat cat cat");
+        index.addDocument(docNew);
+        auto resultCat = index.search("cat");
+        REQUIRE(resultCat.size() == 2);
+        REQUIRE(containsEntry(resultCat, docNew.getId(), 3));
+        REQUIRE(containsEntry(resultCat, doc2.getId(), 1));
+        auto resultDog = index.search("dog");
+        REQUIRE(resultDog.empty());
+    }
+}
+
+TEST_CASE("InvertedIndex: remove Document", "[invertedIndex]")
+{
+    InvertedIndex index;
+    Document doc1(1, "doc1", "apple banana apple");
+    Document doc2(2, "doc2", "apple cherry");
+    index.addDocument(doc1);
+    index.addDocument(doc2);
+    SECTION("document")
+    {
+        index.removeDocument(1);
+        auto result = index.search("apple");
+        REQUIRE(result.size() == 1);
+        REQUIRE(containsEntry(result, doc2.getId(), 1));
+        REQUIRE(!containsEntry(result, doc1.getId(), 1));
+
+        auto resultBanana = index.search("banana");
+        REQUIRE(resultBanana.empty());
+
+        auto resultCherry = index.search("cherry");
+        REQUIRE(resultCherry.size() == 1);
+        REQUIRE(containsEntry(resultCherry, doc2.getId(), 1));
+    }
+
+    SECTION("no document")
+    {
+        REQUIRE_NOTHROW(index.removeDocument(22));
+        REQUIRE(index.search("apple").size() == 2);
+    }
+}
+
+TEST_CASE("InvertedIndex: WordInDocument", "[InvertedIndex]")
+{
+    InvertedIndex index;
+    Document doc(5, "doc5", "one one two");
+    index.addDocument(doc);
+
+    SECTION("Word in document")
+    {
+        REQUIRE(index.WordInDocument("one", 5) == 2);
+        REQUIRE(index.WordInDocument("two", 5) == 1);
+    }
+
+    SECTION("No word in this document")
+    {
+        Document doc2(6, "doc6", "three");
+        index.addDocument(doc2);
+        REQUIRE(index.WordInDocument("one", 6) == 0);
+    }
+
+    SECTION("No word")
+    {
+        REQUIRE(index.WordInDocument("surprise", 5) == 0);
+    }
+}
+TEST_CASE("DocumentBuilder::SplitToWords splits text into words", "[DocumentBuilder][SplitToWords]")
+{
+    SECTION("Simple sentence")
+    {
+        auto words = DocumentBuilder::SplitToWords("hello world cpp");
+        REQUIRE(words.size() == 3);
+        REQUIRE(words[0] == "hello");
+        REQUIRE(words[1] == "world");
+        REQUIRE(words[2] == "cpp");
+    }
+
+    SECTION("Empty string")
+    {
+        auto words = DocumentBuilder::SplitToWords("");
+        REQUIRE(words.empty());
+    }
+
+    SECTION("Single word")
+    {
+        auto words = DocumentBuilder::SplitToWords("hello");
+        REQUIRE(words.size() == 1);
+        REQUIRE(words[0] == "hello");
+    }
+
+    SECTION("Multiple spaces")
+    {
+        auto words = DocumentBuilder::SplitToWords("hello    world");
+        REQUIRE(words.size() == 2);
+        REQUIRE(words[0] == "hello");
+        REQUIRE(words[1] == "world");
+    }
+
+    SECTION("Words with punctuation")
+    {
+        auto words = DocumentBuilder::SplitToWords("hello, world!");
+        REQUIRE(words.size() == 2);
+        REQUIRE(words[0] == "hello");
+        REQUIRE(words[1] == "world");
+    }
+
+    SECTION("Newlines and tabs")
+    {
+        auto words = DocumentBuilder::SplitToWords("hello\nworld\tcpp");
+        REQUIRE(words.size() == 3);
+        REQUIRE(words[0] == "hello");
+        REQUIRE(words[1] == "world");
+        REQUIRE(words[2] == "cpp");
+    }
+}
+
+TEST_CASE("DocumentBuilder", "[DocumentBuilder]")
+{
+    std::string text = "  HeLLo   WoRlD  ";
+
+    std::string lower = DocumentBuilder::ToLower(text);
+    REQUIRE(lower == "  hello   world  ");
+
+    std::string title = DocumentBuilder::ToTitleWord(text);
+    REQUIRE(title == "  Hello   World  ");
+
+    auto words = DocumentBuilder::SplitToWords(text);
+    REQUIRE(words.size() == 2);
+    REQUIRE(words[0] == "HeLLo");
+    REQUIRE(words[1] == "WoRlD");
+}
+TEST_CASE("DocumentBuilder handles edge cases", "[DocumentBuilder][EdgeCases]")
+{
+    SECTION("Very long string")
+    {
+        std::string long_text(10000, 'a');
+        auto words = DocumentBuilder::SplitToWords(long_text);
+        REQUIRE(words.size() == 1);
+        REQUIRE(words[0].size() == 10000);
+    }
+
+    SECTION("Only spaces")
+    {
+        std::string spaces = "     ";
+        auto words = DocumentBuilder::SplitToWords(spaces);
+        REQUIRE(words.empty());
+
+        std::string lower = DocumentBuilder::ToLower(spaces);
+        REQUIRE(lower == spaces);
+    }
+
+    SECTION("Special characters")
+    {
+        std::string special = "@#$%^&*()";
+        auto words = DocumentBuilder::SplitToWords(special);
+        REQUIRE(words.size() == 0);
+    }
+}
+TEST_CASE("IndexStore: add and search document", "[IndexStore]")
+{
+    // Проверяет, что документ добавляется, и слово находится с правильной частотой
+    IndexStore store;
+    Document doc(1, "test.txt", "hello world hello");
+    REQUIRE(store.addDocument(doc).has_value());
+
+    auto result = store.search("hello");
+    REQUIRE(result.has_value());
+    const auto& vec = result.value();
+    REQUIRE(vec.size() == 1);
+    REQUIRE(containsEntry(vec, 1, 2));
+}
+
+TEST_CASE("IndexStore: remove document", "[IndexStore]")
+{
+    // Проверяет удаление документа: после удаления слово не ищется
+    IndexStore store;
+    Document doc(1, "doc", "apple");
+    store.addDocument(doc);
+    REQUIRE(store.removeDocument(1).has_value());
+
+    auto res = store.search("apple");
+    REQUIRE(res.value().empty());
+}
+
+TEST_CASE("IndexStore: duplicate ID error", "[IndexStore]")
+{
+    // При добавлении документа с уже существующим ID возвращается ошибка
+    IndexStore store;
+    Document doc(1, "doc", "text");
+    store.addDocument(doc);
+    auto res = store.addDocument(doc);
+    REQUIRE_FALSE(res.has_value());
+    REQUIRE(res.error() == IndexError::DocumentAlreadyExists);
+}
+
+TEST_CASE("IndexStore: empty word search error", "[IndexStore]")
+{
+    // Поиск по пустому слову возвращает ошибку EmptyWord
+    IndexStore store;
+    auto res = store.search("");
+    REQUIRE_FALSE(res.has_value());
+    REQUIRE(res.error() == IndexError::EmptyWord);
+}
+
+TEST_CASE("IndexStore: wordCount for existing and missing doc", "[IndexStore]")
+{
+    // Проверяет частоту слова в существующем документе и ошибку для несуществующего
+    IndexStore store;
+    Document doc(1, "doc", "three three three");
+    store.addDocument(doc);
+
+    auto cnt = store.WordInDocument("three", 1);
+    REQUIRE(cnt.has_value());
+    REQUIRE(cnt.value() == 3);
+
+    auto cnt2 = store.WordInDocument("three", 999);
+    REQUIRE_FALSE(cnt2.has_value());
+    REQUIRE(cnt2.error() == IndexError::DocumentNotFound);
+}
+TEST_CASE("Transaction: changes invisible before commit, visible after", "[transaction]")
+{
+    // Изменения внутри транзакции не видны через IndexStore до вызова commit()
+    IndexStore store;
+    Document doc(1, "doc", "fruit");
+
+    auto txRes = store.beginTransaction();
+    REQUIRE(txRes.has_value());
+    auto tx = std::move(txRes).value();
+    REQUIRE(tx.addDocument(doc).has_value());
+
+    auto before = store.search("fruit");
+    REQUIRE(before.value().empty());
+
+    tx.commit();
+
+    auto after = store.search("fruit");
+    REQUIRE(after.value().size() == 1);
+}
+
+TEST_CASE("Transaction: automatic rollback if no commit", "[transaction]")
+{
+    // При разрушении транзакции без commit() изменения откатываются
+    IndexStore store;
+    Document doc(1, "doc", "data");
+
+    {
+        auto txRes = store.beginTransaction();
+        auto tx = std::move(txRes).value();
+        tx.addDocument(doc);
+    } // tx уничтожается – откат
+
+    auto res = store.search("data");
+    REQUIRE(res.value().empty());
+}
+
+TEST_CASE("Transaction: delete document inside transaction", "[transaction]")
+{
+    // Удаление документа внутри транзакции, затем commit – документ удаляется
+    IndexStore store;
+    Document doc(1, "doc", "remove me");
+    store.addDocument(doc);
+
+    auto txRes = store.beginTransaction();
+    auto tx = std::move(txRes).value();
+    REQUIRE(tx.removeDocument(1).has_value());
+    tx.commit();
+
+    auto res = store.search("remove");
+    REQUIRE(res.value().empty());
+}
+
+TEST_CASE("Transaction: error inside transaction causes full rollback", "[transaction]")
+{
+    // Если внутри транзакции произошла ошибка (например, дубликат), все изменения откатываются
+    IndexStore store;
+    Document doc1(1, "doc1", "a");
+    Document doc2(2, "doc2", "b");
+
+    auto txRes = store.beginTransaction();
+    auto tx = std::move(txRes).value();
+    tx.addDocument(doc1).has_value();
+    auto dup = tx.addDocument(doc1); // дубликат – ошибка
+    REQUIRE_FALSE(dup.has_value());
+    // Не вызываем commit, tx разрушится – doc1 не останется
+
+    REQUIRE(store.search("a").value().empty());
+}
+
+TEST_CASE("Error: direct modification when transaction active", "[errors]")
+{
+    // Прямой вызов addDocument/removeDocument запрещён, если транзакция уже начата
+    IndexStore store;
+    Document doc(1, "doc", "blocked");
+
+    auto txRes = store.beginTransaction();
+    auto tx = std::move(txRes).value();
+
+    auto res = store.addDocument(doc);
+    REQUIRE_FALSE(res.has_value());
+    REQUIRE(res.error() == IndexError::TransactionAlreadyActive);
+}
+
+TEST_CASE("Error: modification after commit", "[errors]")
+{
+    // После коммита транзакция не должна позволять дальнейшие изменения
+    IndexStore store;
+    Document doc(1, "doc", "done");
+
+    auto txRes = store.beginTransaction();
+    auto tx = std::move(txRes).value();
+    tx.addDocument(doc);
+    tx.commit();
+
+    auto res = tx.addDocument(doc);
+    REQUIRE_FALSE(res.has_value());
+    REQUIRE(res.error() == IndexError::TransactionAlreadyCompleted);
+}
+
+TEST_CASE("Error: invalid document (empty name or text)", "[errors]")
+{
+    // Документ с пустым именем или текстом считается невалидным
+    IndexStore store;
+    Document emptyName(1, "", "content");
+    Document emptyText(2, "name", "");
+
+    auto res1 = store.addDocument(emptyName);
+    auto res2 = store.addDocument(emptyText);
+    REQUIRE_FALSE(res1.has_value());
+    REQUIRE(res1.error() == IndexError::InvalidDocument);
+    REQUIRE_FALSE(res2.has_value());
+    REQUIRE(res2.error() == IndexError::InvalidDocument);
 }
