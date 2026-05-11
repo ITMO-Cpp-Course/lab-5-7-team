@@ -4,14 +4,14 @@
 #include <type_traits>
 namespace lab_6
 {
-template <typename T>
+template <typename T>//Шаблон класса
 // следующий класс с параметром типа Т (может быть число, вектор, строка)
 
 class Result
 {
   private:
     std::expected<T, IndexError> exp_;
-
+//библиотечный тип. Если операция успешна, в нём лежит T, иначе IndexError.
   public:
     using value_type = T;
     // выдает какой тип у Т, если нет ошибки
@@ -20,16 +20,19 @@ class Result
     Result() = delete;
     // удаляем конструктор - не может быть пустой объект
 
-    Result(T value) noexcept(std::is_nothrow_move_constructible_v<T>) : exp_(std::move(value)) {}
-    // если noexcept(false) - разрешены исключения(в итоге Result не создаем)
-    Result(IndexError error) noexcept : exp_(std::unexpected(error)) {}
+    Result(T value) noexcept(std::is_nothrow_move_constructible_v<T>) : exp_(std::move(value)) {}//Мы забираем данные у временного объекта, а не копируем их.
+    // если noexcept(false) - разрешены исключения(в итоге Result не создаем)  std::move(value) превращает value (который является lvalue, потому что у него есть имя) в rvalue-ссылку.
 
+
+    //компилятору: «Этот конструктор не бросит исключение, ПРИ УСЛОВИИ, что сам тип T умеет перемещаться без исключений».
+    Result(IndexError error) noexcept : exp_(std::unexpected(error)) {}
+//std::unexpected(error) — вспомогательная функция, создающая объект, который std::expected интерпретирует как ошибку.
     bool has_value() const noexcept
     {
         return exp_.has_value();
     }
 
-    const T& value() const&
+    const T& value() const& //lvalue
     {
         return exp_.value();
     }
@@ -37,9 +40,9 @@ class Result
     {
         return exp_.error();
     } // только для долгоживущих тк & (ref-квалификатор)
-    T&& value() &&
-    {
-        return std::move(exp_.value());
+    T&& value() && //rvalue
+    {//Возвращает rvalue-ссылку на значение, используя std::move.
+        return std::move(exp_.value());  //Это позволяет переместить значение из временного Result наружу, избегая копирования.
     }
 };
 

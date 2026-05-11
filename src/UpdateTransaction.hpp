@@ -21,10 +21,7 @@ class UpdateTransaction
     UpdateTransaction& operator=(UpdateTransaction&& other) noexcept;
 
     ~UpdateTransaction();
-
-    Result<void> addDocument(const Document& doc);
-    Result<void> removeDocument(size_t id);
-
+    InvertedIndex& index();
     void commit();
     bool isCommitted() const
     {
@@ -33,8 +30,7 @@ class UpdateTransaction
 
   private:
     IndexStore& store_;
-    InvertedIndex draft_;                    // копия индекса
-    std::unordered_set<size_t> draftDocIds_; // копия множества id
+    InvertedIndex draft_; // копия индекса
     bool committed_ = false;
 };
 

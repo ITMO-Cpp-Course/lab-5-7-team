@@ -6,7 +6,8 @@ namespace lab_6
 {
 
 IndexStore::IndexStore() = default;
-
+//Конструктор по умолчанию – генерируется компилятором. Инициализирует invertedIndex_ (пустой), docIds_ (пустое множество)
+//и transactionActive_ (false). Никакой дополнительной логики не нужно.
 Result<void> IndexStore::addDocument(const Document& doc)
 {
     if (transactionActive_)
@@ -23,12 +24,12 @@ Result<void> IndexStore::addDocument(const Document& doc)
         return Result<void>(IndexError::InvalidDocument);
     }
     if (docIds_.find(doc.getId()) != docIds_.end())
-    {
+    {//Множество docIds_ хранит все идентификаторы, уже добавленных документов. Если id уже есть – ошибка.
         return Result<void>(IndexError::DocumentAlreadyExists);
     }
 
     invertedIndex_.addDocument(doc); // метод InvertedIndex принимает только один аргумент
-    docIds_.insert(doc.getId());
+    docIds_.insert(doc.getId());  // вставляет переданное значение в множество, если его там ещё нет. Если значение уже существует, ничего не меняется.
     return Result<void>();
 }
 
@@ -90,3 +91,14 @@ Result<UpdateTransaction> IndexStore::beginTransaction()
 }
 
 } // namespace lab_6
+//создаёт и возвращает новый объект UpdateTransaction, передавая ему ссылку на текущий IndexStore.
+//this — это указатель на объект, внутри которого мы сейчас находимся (т.е. на сам IndexStore).
+//*this — сам объект IndexStore (разыменованный указатель).
+
+//Таким образом, UpdateTransaction(*this) вызывает конструктор UpdateTransaction(IndexStore& store), который:
+
+//копирует invertedIndex_ в свой черновик draft_,
+
+//копирует docIds_ в draftDocIds_,
+
+//запоминает ссылку на хранилище.
