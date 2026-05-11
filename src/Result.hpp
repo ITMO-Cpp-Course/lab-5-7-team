@@ -24,7 +24,8 @@ class Result
         : exp_(std::move(value)) {} // Мы забираем данные у временного объекта, а не копируем их.
 
     Result(IndexError error) noexcept : exp_(std::unexpected(error)) {}
-    // std::unexpected(error) — вспомогательная функция, создающая объект, который std::expected интерпретирует как ошибку.
+    // std::unexpected(error) — вспомогательная функция, создающая объект, который std::expected интерпретирует как
+    // ошибку.
     bool has_value() const noexcept
     {
         return exp_.has_value();
