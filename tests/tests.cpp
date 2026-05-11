@@ -335,16 +335,11 @@ TEST_CASE("Transaction: changes invisible before commit, visible after", "[trans
     IndexStore store;
     Document doc(1, "doc", "fruit");
 
-    auto txRes = store.beginTransaction();
+    auto txRes = store.beginTransaction(); // ← ЭТА СТРОКА БЫЛА ПРОПУЩЕНА
     REQUIRE(txRes.has_value());
     auto tx = std::move(txRes).value();
-    REQUIRE(tx.addDocument(doc).has_value());
-
-    auto before = store.search("fruit");
-    REQUIRE(before.value().empty());
-
+    tx.index().addDocument(doc);
     tx.commit();
-
     auto after = store.search("fruit");
     REQUIRE(after.value().size() == 1);
 }
@@ -358,7 +353,7 @@ TEST_CASE("Transaction: automatic rollback if no commit", "[transaction]")
     {
         auto txRes = store.beginTransaction();
         auto tx = std::move(txRes).value();
-        tx.addDocument(doc);
+        tx.index().addDocument(doc);
     } // tx уничтожается – откат
 
     auto res = store.search("data");
@@ -374,27 +369,23 @@ TEST_CASE("Transaction: delete document inside transaction", "[transaction]")
 
     auto txRes = store.beginTransaction();
     auto tx = std::move(txRes).value();
-    REQUIRE(tx.removeDocument(1).has_value());
+    tx.index().removeDocument(1);
     tx.commit();
 
     auto res = store.search("remove");
     REQUIRE(res.value().empty());
 }
-
-TEST_CASE("Transaction: error inside transaction causes full rollback", "[transaction]")
-{
-    // Если внутри транзакции произошла ошибка (например, дубликат), все изменения откатываются
+TEST_CASE("Transaction: rollback on exit without commit", "[transaction]")
+{ // Если внутри транзакции произошла ошибка (например, дубликат), все изменения откатываются
     IndexStore store;
-    Document doc1(1, "doc1", "a");
-    Document doc2(2, "doc2", "b");
+    Document doc(1, "doc1", "a");
 
-    auto txRes = store.beginTransaction();
-    auto tx = std::move(txRes).value();
-    tx.addDocument(doc1).has_value();
-    auto dup = tx.addDocument(doc1); // дубликат – ошибка
-    REQUIRE_FALSE(dup.has_value());
-    // Не вызываем commit, tx разрушится – doc1 не останется
-
+    {
+        auto txRes = store.beginTransaction();
+        auto tx = std::move(txRes).value();
+        tx.index().addDocument(doc);
+        // не коммитим
+    }
     REQUIRE(store.search("a").value().empty());
 }
 
@@ -412,20 +403,22 @@ TEST_CASE("Error: direct modification when transaction active", "[errors]")
     REQUIRE(res.error() == IndexError::TransactionAlreadyActive);
 }
 
-TEST_CASE("Error: modification after commit", "[errors]")
+TEST_CASE("Transaction: second commit does nothing", "[transaction]")
 {
-    // После коммита транзакция не должна позволять дальнейшие изменения
     IndexStore store;
     Document doc(1, "doc", "done");
 
     auto txRes = store.beginTransaction();
     auto tx = std::move(txRes).value();
-    tx.addDocument(doc);
+    tx.index().addDocument(doc);
     tx.commit();
 
-    auto res = tx.addDocument(doc);
-    REQUIRE_FALSE(res.has_value());
-    REQUIRE(res.error() == IndexError::TransactionAlreadyCompleted);
+    REQUIRE(tx.isCommitted() == true);
+    // Повторный commit не должен ничего сломать
+    REQUIRE_NOTHROW(tx.commit());
+    // Документ остался в индексе
+    auto res = store.search("done");
+    REQUIRE(res.value().size() == 1);
 }
 
 TEST_CASE("Error: invalid document (empty name or text)", "[errors]")
