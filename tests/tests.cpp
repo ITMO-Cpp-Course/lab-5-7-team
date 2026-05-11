@@ -363,8 +363,7 @@ TEST_CASE("Transaction: automatic rollback if no commit", "[transaction]")
 TEST_CASE("Transaction: delete document inside transaction", "[transaction]")
 {
     // Удаление документа внутри транзакции, затем commit – документ удаляется
-    IndexStore stor
-    e;
+    IndexStore store;
     Document doc(1, "doc", "remove me");
     store.addDocument(doc);
 
