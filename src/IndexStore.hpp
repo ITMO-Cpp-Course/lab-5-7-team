@@ -28,18 +28,10 @@ class IndexStore
   private:
     friend class UpdateTransaction;
     InvertedIndex invertedIndex_;
-<<<<<<< Updated upstream
     std::unordered_set<size_t> docIds_; // множество идентификаторов документов для быстрой проверки существования
     bool transactionActive_ = false;    // true, если существует активная транзакци
 }; // Ключ — строка-слово (в нижнем регистре).
 // Значение — вектор «вхождений» (структур Entry).
 // docId — идентификатор документа,
 // count (или index в твоей терминологии) — количество раз, которое слово встретилось в этом документе.
-=======
-    std::unordered_set<size_t> docIds_;
-    bool transactionActive_ = false; // true, если существует активная транзакци
-    // При создании транзакции флаг true, при разрушении или коммите – false.
-    // существует не более одной транзакции с committed_ == false
-};
->>>>>>> Stashed changes
 } // namespace lab_6
