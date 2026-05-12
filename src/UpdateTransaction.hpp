@@ -13,7 +13,7 @@ class IndexStore;
 class UpdateTransaction
 {
   public:
-    explicit UpdateTransaction(IndexStore& store);
+    explicit UpdateTransaction(IndexStore& store); //запрещенно неявное преобразование
     UpdateTransaction(const UpdateTransaction&) = delete;
     UpdateTransaction& operator=(const UpdateTransaction&) = delete;
 
@@ -32,6 +32,11 @@ class UpdateTransaction
     IndexStore& store_;
     InvertedIndex draft_; // копия индекса
     bool committed_ = false;
+    // становится true после commit() или после перемещения из объекта 
+    // После true никакие изменения не принимаются.
 };
+
+// Черновик и множество ID всегда согласованы
+//
 
 } // namespace lab_6

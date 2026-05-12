@@ -335,7 +335,7 @@ TEST_CASE("Transaction: changes invisible before commit, visible after", "[trans
     IndexStore store;
     Document doc(1, "doc", "fruit");
 
-    auto txRes = store.beginTransaction(); // ← ЭТА СТРОКА БЫЛА ПРОПУЩЕНА
+    auto txRes = store.beginTransaction();
     REQUIRE(txRes.has_value());
     auto tx = std::move(txRes).value();
     tx.index().addDocument(doc);

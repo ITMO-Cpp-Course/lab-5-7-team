@@ -1,4 +1,4 @@
-add_library(src STATIC
+add_library(lab_5_6 STATIC
         Document.cpp
         DocumentBuilder.cpp
         InvertedIndex.cpp

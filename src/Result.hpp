@@ -35,15 +35,22 @@ class Result
     {
         return exp_.value();
     }
-    const IndexError& error() const
+    const IndexError& error() const&
     {
         return exp_.error();
     } // только для долгоживущих тк & (ref-квалификатор)
+<<<<<<< Updated upstream
     T&& value() && // rvalue
     {              // Возвращает rvalue-ссылку на значение, используя std::move.
         return std::move(
             exp_.value()); // Это позволяет переместить значение из временного Result наружу, избегая копирования.
     }
+=======
+    T&& value() &&
+    {
+        return std::move(exp_.value());
+    } // уже для rvalue
+>>>>>>> Stashed changes
 };
 
 template <>

@@ -88,8 +88,8 @@ Result<UpdateTransaction> IndexStore::beginTransaction()
         return Result<UpdateTransaction>(IndexError::TransactionAlreadyActive);
     }
     transactionActive_ = true;
-    return UpdateTransaction(*this);
-}
+    return UpdateTransaction(*this); // вызывает конструктор UpdateTransaction
+} // создает новую транзакцию, помещает её в успешный Result и возвращает этот Result наружу
 
 } // namespace lab_6
 // создаёт и возвращает новый объект UpdateTransaction, передавая ему ссылку на текущий IndexStore.

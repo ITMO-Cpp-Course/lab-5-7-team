@@ -9,6 +9,8 @@ UpdateTransaction::UpdateTransaction(IndexStore& store) : store_(store), draft_(
 {
     store_.transactionActive_ = true;
 }
+} // не помечен noexcept, потому что копирование индекса может вызвать исключение (выделение памяти)
+
 UpdateTransaction::~UpdateTransaction()
 {
     if (!committed_)
@@ -23,6 +25,7 @@ UpdateTransaction::UpdateTransaction(
     : store_(other.store_), draft_(std::move(other.draft_)), committed_(other.committed_)
 {
     other.committed_ = true;
+    // деструктор не будет вызываться, а у нового объекта commited_ = false
 }
 
 UpdateTransaction& UpdateTransaction::operator=(UpdateTransaction&& other) noexcept
@@ -41,12 +44,14 @@ InvertedIndex& UpdateTransaction::index()
 {
     return store_.invertedIndex_;
 }
+
 void UpdateTransaction::commit()
 {
     if (!committed_)
     {
         committed_ = true;
         store_.transactionActive_ = false; // транзакция завершена
-    }
+        // разблокировали хранилище для следующих транзакций
+    } // commit() сбрасывает флаг после успешного перемещения данных.
 }
 } // namespace lab_6
