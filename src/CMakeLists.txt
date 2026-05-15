@@ -1,1 +1,18 @@
-# TODO: Your code
+add_library(lab_5_6 STATIC
+        Document.cpp
+        DocumentBuilder.cpp
+        InvertedIndex.cpp
+        IndexStore.cpp
+        UpdateTransaction.cpp
+        Result.cpp
+)
+
+target_link_libraries(lab_5_6 PRIVATE project_warnings)
+if (TARGET project_sanitizers)
+    target_link_libraries(lab_5_6 PRIVATE project_sanitizers)
+endif ()
+
+target_include_directories(lab_5_6
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
