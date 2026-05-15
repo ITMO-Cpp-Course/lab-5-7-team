@@ -24,7 +24,8 @@ class Result
         : exp_(std::move(value)) {} // Мы забираем данные у временного объекта, а не копируем их.
 
     Result(IndexError error) noexcept : exp_(std::unexpected(error)) {}
-    // std::unexpected(error) — вспомогательная функция, создающая объект, который std::expected интерпретирует как ошибку.
+    // std::unexpected(error) — вспомогательная функция, создающая объект, который std::expected интерпретирует как
+    // ошибку.
     bool has_value() const noexcept
     {
         return exp_.has_value();
@@ -34,15 +35,22 @@ class Result
     {
         return exp_.value();
     }
-    const IndexError& error() const
+    const IndexError& error() const&
     {
         return exp_.error();
     } // только для долгоживущих тк & (ref-квалификатор)
+<<<<<<< Updated upstream
     T&& value() && // rvalue
     {              // Возвращает rvalue-ссылку на значение, используя std::move.
         return std::move(
             exp_.value()); // Это позволяет переместить значение из временного Result наружу, избегая копирования.
     }
+=======
+    T&& value() &&
+    {
+        return std::move(exp_.value());
+    } // уже для rvalue
+>>>>>>> Stashed changes
 };
 
 template <>
