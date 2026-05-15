@@ -8,7 +8,6 @@ namespace lab_6
 UpdateTransaction::UpdateTransaction(IndexStore& store) : store_(store), draft_(store.invertedIndex_)
 {
     store_.transactionActive_ = true;
-}
 } // не помечен noexcept, потому что копирование индекса может вызвать исключение (выделение памяти)
 
 UpdateTransaction::~UpdateTransaction()
