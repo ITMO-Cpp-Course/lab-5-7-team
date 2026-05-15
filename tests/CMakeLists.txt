@@ -19,7 +19,7 @@ target_include_directories(resource_tests PRIVATE
 )
 
 target_link_libraries(resource_tests PRIVATE
-        src
+        lab_5_6
         project_warnings
         Catch2::Catch2WithMain
 )

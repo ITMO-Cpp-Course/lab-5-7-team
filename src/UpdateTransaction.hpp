@@ -30,7 +30,7 @@ class UpdateTransaction
 
   private:
     IndexStore& store_;
-    InvertedIndex draft_; // копия индекса
+    InvertedIndex draft_;
     bool committed_ = false;
 };
 

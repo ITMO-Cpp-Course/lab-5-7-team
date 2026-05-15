@@ -11,11 +11,6 @@ bool Result<void>::has_value() const noexcept
 {
     return exp_.has_value();
 }
-
-void Result<void>::value() const
-{
-    exp_.value();
-}
 const IndexError& Result<void>::error() const&
 {
     return exp_.error();

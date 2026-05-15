@@ -7,8 +7,7 @@
 namespace lab_6
 {
 InvertedIndex::InvertedIndex(const InvertedIndex& other)
-    : invertedIndex_(other.invertedIndex_),
-      documents_(other.documents_) // если используется shared_ptr, копия разделяемая
+    : invertedIndex_(other.invertedIndex_), documents_(other.documents_)
 {
 }
 
